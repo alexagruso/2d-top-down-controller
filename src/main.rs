@@ -3,6 +3,7 @@ use bevy::{diagnostic::FrameTimeDiagnosticsPlugin, log::LogPlugin, prelude::*};
 use topdown_controller_2d::{
     characters::{CharacterControllerPlugin, PlayerPlugin},
     debug::DebugPlugin,
+    laser::LaserPlugin,
     physics::ObjectLayer,
 };
 
@@ -10,13 +11,14 @@ fn main() {
     App::new()
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .add_plugins((
-            // Prevents non-error bevy engine logs from printing to the console
+            // Prevents non-error bevy engine logs from printing to the console.
             DefaultPlugins.build().disable::<LogPlugin>(),
             PhysicsPlugins::default().with_length_unit(20.0),
             FrameTimeDiagnosticsPlugin::default(),
             PhysicsDebugPlugin::default(),
             DebugPlugin,
             CharacterControllerPlugin,
+            LaserPlugin,
             PlayerPlugin,
         ))
         .add_systems(Startup, world_setup)
@@ -122,15 +124,6 @@ fn world_setup(
             Wall,
         ));
     }
-}
-
-// TODO: find a place for this
-#[allow(unused)]
-fn cursor_to_camera_position(window_position: Vec2, window_size: Vec2) -> Vec2 {
-    Vec2::new(
-        window_position.x - window_size.x / 2.0,
-        -window_position.y + window_size.y / 2.0,
-    )
 }
 
 #[derive(Component)]

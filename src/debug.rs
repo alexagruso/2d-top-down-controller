@@ -14,7 +14,7 @@ impl Plugin for DebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             CameraZoomPlugin,
-            FpsOverlayPlugin::default(),
+            FpsOverlayPlugin::new(Color::srgb(1.0, 1.0, 0.0)),
             WindowEscapePlugin,
         ));
     }

@@ -11,7 +11,7 @@ pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<PlayerMovement>()
+        app.add_message::<PlayerMovement>()
             .add_systems(Startup, player_setup)
             .add_systems(Update, player_input)
             .add_systems(FixedPreUpdate, player_movement)
@@ -27,7 +27,7 @@ impl Plugin for PlayerPlugin {
 struct PlayerCamera;
 
 #[derive(Component)]
-struct Player {
+pub struct Player {
     speed: f32,
     run_multiplier: f32,
 }
@@ -41,7 +41,7 @@ impl Default for Player {
     }
 }
 
-#[derive(Event)]
+#[derive(Message)]
 enum PlayerMovement {
     Move(Vec2),
     Rotate(f32),
@@ -73,14 +73,9 @@ fn player_setup(
 
 fn player_input(
     key_input: Res<ButtonInput<KeyCode>>,
-    player: Query<&Player>,
-    mut player_movement_event: EventWriter<PlayerMovement>,
+    player: Single<&Player>,
+    mut player_movement_event: MessageWriter<PlayerMovement>,
 ) {
-    let player = match player.single() {
-        Ok(result) => result,
-        Err(_) => panic!("There must always be exactly one player"),
-    };
-
     let mut velocity = Vec2::ZERO;
 
     if key_input.pressed(KeyCode::KeyA) {
@@ -112,15 +107,11 @@ fn player_input(
 }
 
 fn player_movement(
-    mut player_query: Query<(&mut Transform, &mut Velocity), With<Player>>,
-    mut player_input_event: EventReader<PlayerMovement>,
+    player: Single<(&mut Transform, &mut Velocity), With<Player>>,
+    mut player_inputs: MessageReader<PlayerMovement>,
 ) {
-    let (mut transform, mut velocity) = match player_query.single_mut() {
-        Ok(result) => result,
-        Err(_) => panic!("There must always be exactly one player"),
-    };
-
-    for event in player_input_event.read() {
+    let (mut transform, mut velocity) = player.into_inner();
+    for event in player_inputs.read() {
         match event {
             PlayerMovement::Move(delta_velocity) => velocity.0 = *delta_velocity,
             PlayerMovement::Rotate(angle) => transform.rotate_z(*angle),
@@ -129,17 +120,8 @@ fn player_movement(
 }
 
 fn camera_tracking(
-    player: Query<&Transform, With<Player>>,
-    mut camera: Query<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
+    player: Single<&Transform, With<Player>>,
+    mut camera: Single<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
 ) {
-    let player_transform = match player.single() {
-        Ok(result) => result,
-        Err(_) => panic!("There must always be exactly one player"),
-    };
-    let mut camera_transform = match camera.single_mut() {
-        Ok(result) => result,
-        Err(_) => panic!("There cannot be more than one camera tracking the player"),
-    };
-
-    camera_transform.translation = player_transform.translation;
+    camera.translation = player.translation;
 }

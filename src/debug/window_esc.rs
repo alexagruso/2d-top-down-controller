@@ -8,7 +8,7 @@ impl Plugin for WindowEscapePlugin {
     }
 }
 
-fn exit_on_esc(key_input: Res<ButtonInput<KeyCode>>, mut exit_event: EventWriter<AppExit>) {
+fn exit_on_esc(key_input: Res<ButtonInput<KeyCode>>, mut exit_event: MessageWriter<AppExit>) {
     if key_input.pressed(KeyCode::Escape) {
         exit_event.write(AppExit::Success);
     }

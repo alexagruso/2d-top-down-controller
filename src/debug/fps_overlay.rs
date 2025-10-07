@@ -3,13 +3,23 @@ use bevy::{
     prelude::*,
 };
 
+#[derive(Resource, Deref, DerefMut)]
+pub struct FpsOverlayColor(pub Color);
+
 pub struct FpsOverlayPlugin {
     color: Color,
 }
 
+impl FpsOverlayPlugin {
+    pub fn new(color: Color) -> Self {
+        Self { color }
+    }
+}
+
 impl Plugin for FpsOverlayPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_fps_overlay)
+        app.insert_resource(FpsOverlayColor(self.color))
+            .add_systems(Startup, setup_fps_overlay)
             .add_systems(Update, update_fps_overlay);
     }
 }
@@ -25,12 +35,13 @@ impl Default for FpsOverlayPlugin {
 #[derive(Component)]
 struct FpsOverlay;
 
-fn setup_fps_overlay(mut commands: Commands) {
+fn setup_fps_overlay(text_color: Res<FpsOverlayColor>, mut commands: Commands) {
     // TODO: make this use text sections
     commands.spawn((
         FpsOverlay,
         Text::new("Fps: "),
-        TextLayout::new_with_justify(JustifyText::Right),
+        TextColor(**text_color),
+        TextLayout::new_with_justify(Justify::Right),
         Node {
             position_type: PositionType::Absolute,
             top: Val::Px(5.0),

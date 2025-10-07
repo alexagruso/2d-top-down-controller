@@ -12,7 +12,7 @@ impl Plugin for CameraZoomPlugin {
 pub struct CameraZoom;
 
 fn camera_zoom(
-    mut scroll_input: EventReader<MouseWheel>,
+    mut scroll_input: MessageReader<MouseWheel>,
     mut camera: Query<&mut Projection, With<CameraZoom>>,
 ) {
     let mut projection = match camera.single_mut() {
