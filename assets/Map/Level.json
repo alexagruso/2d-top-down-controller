@@ -1,0 +1,23 @@
+{
+  "ogmoVersion": "3.4.0",
+  "width": 128,
+  "height": 128,
+  "offsetX": 0,
+  "offsetY": 0,
+  "layers": [
+    {
+      "name": "Level",
+      "_eid": "90934317",
+      "offsetX": 0,
+      "offsetY": 0,
+      "gridCellWidth": 16,
+      "gridCellHeight": 16,
+      "gridCellsX": 8,
+      "gridCellsY": 8,
+      "tileset": "Metal",
+      "data": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 16, 1, 0, 0, 1, 0, 9, 17, 1, 1, 1, 0, 1, 0, 0, 1, 9, 16, 0, 0, 0, 0, 17, 1, 1, 16, 0, 0, 9, 0, 17, 1, 1, 0, 0, 0, 17, 0, 16, 0, 16, 0, 0, 9, 0, 0, 0, 0, 0, 17, 0, 0],
+      "exportMode": 0,
+      "arrayMode": 0
+    }
+  ]
+}
