@@ -4,8 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-# TODO: remove this when compatibility with bevy 0.17 is fixed
-avian2d = { git = "https://github.com/Jondolf/avian", branch = "main" }
+avian2d = { version = "0.4.0" }
 bevy = { version = "0.17.2", features = ["dynamic_linking"] }
 
 # Enable a small amount of optimization in the dev profile.
