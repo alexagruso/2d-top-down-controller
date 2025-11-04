@@ -3,35 +3,25 @@ use bevy::prelude::*;
 
 use crate::{
     characters::{CharacterController, ControllerMovement, Velocity},
-    debug::CameraZoom,
     physics::{ObjectLayer, add_collision_layers},
 };
 
-pub struct PlayerPlugin;
+pub struct OtherCharacterPlugin;
 
-impl Plugin for PlayerPlugin {
+impl Plugin for OtherCharacterPlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<ControllerMovement>()
-            .add_systems(Startup, player_setup)
-            .add_systems(Update, player_input)
-            .add_systems(
-                // PostUpdate prevents the camera from visually lagging behind the player
-                FixedPostUpdate,
-                camera_tracking,
-            );
+            .add_systems(Startup, other_character_setup)
+            .add_systems(Update, other_character_input);
     }
 }
-
 #[derive(Component)]
-struct PlayerCamera;
-
-#[derive(Component)]
-pub struct Player {
+pub struct OtherCharacter {
     speed: f32,
     run_multiplier: f32,
 }
 
-impl Default for Player {
+impl Default for OtherCharacter {
     fn default() -> Self {
         Self {
             speed: 100.0,
@@ -40,58 +30,57 @@ impl Default for Player {
     }
 }
 
-fn player_setup(
+fn other_character_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     use ObjectLayer as OL;
 
-    commands.spawn((Camera2d, CameraZoom, PlayerCamera));
     commands.spawn((
         Mesh2d(meshes.add(Capsule2d::new(35.0, 70.0))),
         Collider::capsule(35.0, 70.0),
         // Mesh2d(meshes.add(Circle::new(30.0))),
         // Collider::circle(30.0),
         add_collision_layers(vec![OL::Player], vec![OL::Obstacle]),
-        MeshMaterial2d(materials.add(Color::srgb(0.0, 0.5, 1.0))),
-        Transform::from_xyz(-50.0, 0.0, 0.0)
+        MeshMaterial2d(materials.add(Color::srgb(0.0, 1.0, 0.5))),
+        Transform::from_xyz(50.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
         Velocity::default(),
-        Player::default(),
+        OtherCharacter::default(),
         CharacterController,
     ));
 }
 
-fn player_input(
+fn other_character_input(
     key_input: Res<ButtonInput<KeyCode>>,
-    player: Single<(&Player, Entity)>,
+    player: Single<(&OtherCharacter, Entity)>,
     mut player_movement_event: MessageWriter<ControllerMovement>,
 ) {
     let (player, entity) = player.into_inner();
     let mut velocity = Vec2::ZERO;
 
-    if key_input.pressed(KeyCode::KeyA) {
+    if key_input.pressed(KeyCode::KeyF) {
         velocity.x -= player.speed;
     }
-    if key_input.pressed(KeyCode::KeyD) {
+    if key_input.pressed(KeyCode::KeyH) {
         velocity.x += player.speed;
     }
 
-    if key_input.pressed(KeyCode::KeyW) {
+    if key_input.pressed(KeyCode::KeyT) {
         velocity.y += player.speed;
     }
-    if key_input.pressed(KeyCode::KeyS) {
+    if key_input.pressed(KeyCode::KeyG) {
         velocity.y -= player.speed;
     }
 
-    if key_input.pressed(KeyCode::KeyQ) {
+    if key_input.pressed(KeyCode::KeyR) {
         player_movement_event.write(ControllerMovement::from_rotation(
             2.0_f32.to_radians(),
             entity,
         ));
     }
-    if key_input.pressed(KeyCode::KeyE) {
+    if key_input.pressed(KeyCode::KeyY) {
         player_movement_event.write(ControllerMovement::from_rotation(
             -2.0_f32.to_radians(),
             entity,
@@ -103,12 +92,4 @@ fn player_input(
     }
 
     player_movement_event.write(ControllerMovement::from_translation(velocity, entity));
-}
-
-// TODO: move this to a better place
-fn camera_tracking(
-    player: Single<&Transform, With<Player>>,
-    mut camera: Single<&mut Transform, (With<PlayerCamera>, Without<Player>)>,
-) {
-    camera.translation = player.translation;
 }

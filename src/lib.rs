@@ -1,7 +1,7 @@
 // TODO: make a prelude for this crate
 
 use crate::{
-    characters::{CharacterControllerPlugin, PlayerPlugin},
+    characters::{CharacterControllerPlugin, OtherCharacterPlugin, PlayerPlugin},
     debug::DebugPlugin,
     laser::LaserPlugin,
     objects::DoorPlugin,
@@ -24,6 +24,7 @@ impl Plugin for GamePlugin {
             DebugPlugin,
             CharacterControllerPlugin,
             LaserPlugin,
+            OtherCharacterPlugin,
             PlayerPlugin,
             WorldPlugin::new(WorldType::CustomGeometry),
             DoorPlugin,

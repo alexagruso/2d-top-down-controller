@@ -1,5 +1,3 @@
-// TODO: change naming convention to character rather than player so that we can semantically apply
-// this code to non-player entities.
 // TODO: look into changing manual velocity/position movement to avian2d
 // linearvelocity/angularvelocity components
 // NOTE: link to paper outlining possible improvements to this algorithm:
@@ -8,11 +6,70 @@
 use avian2d::prelude::*;
 use bevy::{math::InvalidDirectionError, prelude::*};
 
+#[derive(Component)]
+#[require(Transform, Velocity, Collider, CollisionLayers)]
+pub struct CharacterController;
+
 pub struct CharacterControllerPlugin;
 
 impl Plugin for CharacterControllerPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(FixedPreUpdate, character_collision_response);
+        app.add_systems(
+            FixedPreUpdate,
+            (controller_movement, controller_collision_response).chain(),
+        );
+    }
+}
+
+pub enum Movement {
+    Translation(Vec2),
+    Rotation(f32),
+}
+
+// TODO: look into making this use `EntityEvent` rather than `Message`
+#[derive(Message)]
+pub struct ControllerMovement {
+    movement: Movement,
+    entity: Entity,
+}
+
+impl ControllerMovement {
+    pub fn from_translation(translation: Vec2, entity: Entity) -> Self {
+        Self {
+            movement: Movement::Translation(translation),
+            entity,
+        }
+    }
+
+    pub fn from_rotation(angle: f32, entity: Entity) -> Self {
+        Self {
+            movement: Movement::Rotation(angle),
+            entity,
+        }
+    }
+}
+
+fn controller_movement(
+    mut controllers: Query<(&mut Transform, &mut Velocity), With<CharacterController>>,
+    mut movement_messages: MessageReader<ControllerMovement>,
+) {
+    for event in movement_messages.read() {
+        // PERF: This may be unnecessarily called multiple times per frame if one entity has
+        // multiple movement messages.
+        // Related to the TODO above the ControllerMovement struct
+        let (mut transform, mut velocity) = match controllers.get_mut(event.entity) {
+            Ok(result) => result,
+            Err(_) => {
+                unreachable!(
+                    "Entities with a `CharacterController` require a transform and velocity"
+                )
+            }
+        };
+
+        match event.movement {
+            Movement::Translation(delta_velocity) => velocity.0 = delta_velocity,
+            Movement::Rotation(angle) => transform.rotate_z(angle),
+        }
     }
 }
 
@@ -39,14 +96,14 @@ impl Default for CollideAndSlideConfig {
     }
 }
 
-fn character_collision_response(
+fn controller_collision_response(
     time: Res<Time<Fixed>>,
     spatial_query: Res<SpatialQueryPipeline>,
     mut characters: Query<(&mut Transform, &Velocity, &Collider, &CollisionLayers)>,
 ) {
     for (mut transform, velocity, collider, collision_layers) in &mut characters {
-        let player_angle = transform.rotation.to_euler(EulerRot::XYZ).2;
-        let player_angle_unit = vec2(player_angle.cos(), player_angle.sin());
+        let angle = transform.rotation.to_euler(EulerRot::XYZ).2;
+        let angle_unit_vector = vec2(angle.cos(), angle.sin());
 
         let mut cast_origin = transform.translation.xy();
         let mut cast_velocity = velocity.0 * time.delta_secs();
@@ -68,7 +125,7 @@ fn character_collision_response(
             if let Some(hit) = spatial_query.cast_shape(
                 &collider,
                 cast_origin,
-                player_angle,
+                angle,
                 direction,
                 &ShapeCastConfig {
                     max_distance: cast_velocity.length() + config.skin_width,
@@ -90,10 +147,10 @@ fn character_collision_response(
                     cast_origin += snap_to_surface;
                     cast_velocity = (cast_velocity - snap_to_surface).reject_from(hit.normal1);
                 } else {
-                    // Push the player out by the penetration depth.
+                    // Push the collider out by the penetration depth.
                     let world_hit = hit.point1;
                     let character_hit =
-                        hit.point2.rotate(player_angle_unit) + transform.translation.xy();
+                        hit.point2.rotate(angle_unit_vector) + transform.translation.xy();
                     delta_velocity += world_hit - character_hit;
                 }
             } else {
