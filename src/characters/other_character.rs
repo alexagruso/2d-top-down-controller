@@ -54,42 +54,42 @@ fn other_character_setup(
 
 fn other_character_input(
     key_input: Res<ButtonInput<KeyCode>>,
-    player: Single<(&OtherCharacter, Entity)>,
-    mut player_movement_event: MessageWriter<ControllerMovement>,
+    other: Single<(&OtherCharacter, Entity)>,
+    mut movement_event: MessageWriter<ControllerMovement>,
 ) {
-    let (player, entity) = player.into_inner();
+    let (other, entity) = other.into_inner();
     let mut velocity = Vec2::ZERO;
 
-    if key_input.pressed(KeyCode::KeyF) {
-        velocity.x -= player.speed;
+    if key_input.pressed(KeyCode::KeyJ) {
+        velocity.x -= other.speed;
     }
-    if key_input.pressed(KeyCode::KeyH) {
-        velocity.x += player.speed;
-    }
-
-    if key_input.pressed(KeyCode::KeyT) {
-        velocity.y += player.speed;
-    }
-    if key_input.pressed(KeyCode::KeyG) {
-        velocity.y -= player.speed;
+    if key_input.pressed(KeyCode::KeyL) {
+        velocity.x += other.speed;
     }
 
-    if key_input.pressed(KeyCode::KeyR) {
-        player_movement_event.write(ControllerMovement::from_rotation(
+    if key_input.pressed(KeyCode::KeyI) {
+        velocity.y += other.speed;
+    }
+    if key_input.pressed(KeyCode::KeyK) {
+        velocity.y -= other.speed;
+    }
+
+    if key_input.pressed(KeyCode::KeyU) {
+        movement_event.write(ControllerMovement::from_rotation(
             2.0_f32.to_radians(),
             entity,
         ));
     }
-    if key_input.pressed(KeyCode::KeyY) {
-        player_movement_event.write(ControllerMovement::from_rotation(
+    if key_input.pressed(KeyCode::KeyO) {
+        movement_event.write(ControllerMovement::from_rotation(
             -2.0_f32.to_radians(),
             entity,
         ));
     }
 
     if key_input.pressed(KeyCode::ShiftLeft) {
-        velocity *= player.run_multiplier;
+        velocity *= other.run_multiplier;
     }
 
-    player_movement_event.write(ControllerMovement::from_translation(velocity, entity));
+    movement_event.write(ControllerMovement::from_translation(velocity, entity));
 }

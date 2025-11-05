@@ -99,9 +99,9 @@ impl Default for CollideAndSlideConfig {
 fn controller_collision_response(
     time: Res<Time<Fixed>>,
     spatial_query: Res<SpatialQueryPipeline>,
-    mut characters: Query<(&mut Transform, &Velocity, &Collider, &CollisionLayers)>,
+    mut controllers: Query<(&mut Transform, &Velocity, &Collider, &CollisionLayers)>,
 ) {
-    for (mut transform, velocity, collider, collision_layers) in &mut characters {
+    for (mut transform, velocity, collider, collision_layers) in &mut controllers {
         let angle = transform.rotation.to_euler(EulerRot::XYZ).2;
         let angle_unit_vector = vec2(angle.cos(), angle.sin());
 
