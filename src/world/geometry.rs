@@ -10,6 +10,10 @@ pub fn setup_geometry(
 ) {
     use ObjectLayer as OL;
 
+    // commands.spawn((
+    //     Mesh2d(meshes.add(ConvexPolygon)),
+    // ));
+
     commands.spawn((
         Mesh2d(meshes.add(Rectangle::new(25.0, 150.0))),
         MeshMaterial2d(materials.add(Color::srgb(1.0, 1.0, 1.0))),
@@ -35,18 +39,18 @@ pub fn setup_geometry(
         Wall,
     ));
 
-    commands.spawn((
-        Mesh2d(meshes.add(Rectangle::new(25.0, 150.0))),
-        MeshMaterial2d(materials.add(Color::srgb(1.0, 1.0, 1.0))),
-        Transform::from_xyz(0.0, 250.0, 0.0)
-            .with_rotation(Quat::from_rotation_z(f32::to_radians(45.0))),
-        Collider::rectangle(25.0, 150.0),
-        CollisionLayers::new(
-            LayerMask(OL::Obstacle.to_bits()),
-            LayerMask(OL::None.to_bits()),
-        ),
-        Wall,
-    ));
+    // commands.spawn((
+    //     Mesh2d(meshes.add(Rectangle::new(25.0, 150.0))),
+    //     MeshMaterial2d(materials.add(Color::srgb(1.0, 1.0, 1.0))),
+    //     Transform::from_xyz(0.0, 250.0, 0.0)
+    //         .with_rotation(Quat::from_rotation_z(f32::to_radians(45.0))),
+    //     Collider::rectangle(25.0, 150.0),
+    //     CollisionLayers::new(
+    //         LayerMask(OL::Obstacle.to_bits()),
+    //         LayerMask(OL::None.to_bits()),
+    //     ),
+    //     Wall,
+    // ));
 
     commands.spawn((
         Mesh2d(meshes.add(Rectangle::new(450.0, 25.0))),
