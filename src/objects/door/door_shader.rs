@@ -4,7 +4,10 @@ use bevy::{
     sprite_render::{Material2d, Material2dPlugin},
 };
 
-use crate::objects::door::{DOOR_DEFAULT_FILL_COLOR, Door, DoorIsNear};
+use crate::{
+    characters::Player,
+    objects::door::{DOOR_DEFAULT_FILL_COLOR, Door, DoorIsNear},
+};
 
 const DOOR_SHADER_PATH: &str = "shaders/door.wgsl";
 
@@ -18,22 +21,22 @@ impl Plugin for DoorShaderPlugin {
 }
 
 fn update_door_shaders(
-    door_is_open: Query<(&Door, Has<DoorIsNear>)>,
+    doors: Query<(&Door, Has<DoorIsNear>)>,
+    player: Single<&Transform, With<Player>>,
     mut door_highlight_shaders: ResMut<Assets<DoorShader>>,
 ) {
     for (_, shader) in door_highlight_shaders.iter_mut() {
-        match door_is_open.get(shader.door_entity) {
-            Ok((door, highlight)) => {
-                shader.fill_color = if highlight {
-                    door.highlight_color
-                } else {
-                    door.fill_color
-                }
-            }
-            Err(_) => {
-                unreachable!("Door shaders are always spawned with a corresponding door object.")
-            }
-        }
+        let (door, is_highlighted) = doors
+            .get(shader.door_entity)
+            .expect("Door shaders are always spawned with a corresponding door object.");
+
+        shader.fill_color = if is_highlighted {
+            door.highlight_color
+        } else {
+            door.fill_color
+        };
+
+        shader.player_position = player.translation.xy();
     }
 }
 
@@ -41,6 +44,8 @@ fn update_door_shaders(
 pub struct DoorShader {
     #[uniform(0)]
     fill_color: LinearRgba,
+    #[uniform(1)]
+    player_position: Vec2,
     door_entity: Entity,
 }
 
@@ -49,6 +54,7 @@ impl DoorShader {
         Self {
             // Blue, full opacity
             fill_color: DOOR_DEFAULT_FILL_COLOR,
+            player_position: Vec2::ZERO,
             door_entity: entity,
         }
     }

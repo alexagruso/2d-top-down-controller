@@ -10,7 +10,7 @@ use crate::{
 };
 
 const DOOR_DEFAULT_FILL_COLOR: LinearRgba = LinearRgba::new(0.0, 0.0, 1.0, 1.0);
-const DOOR_DEFAULT_HIGHLIGHT_COLOR: LinearRgba = LinearRgba::new(1.0, 1.0, 0.0, 1.0);
+const DOOR_DEFAULT_HIGHLIGHT_COLOR: LinearRgba = LinearRgba::new(0.0, 0.25, 1.0, 1.0);
 
 #[derive(Component)]
 #[component(storage = "SparseSet")]

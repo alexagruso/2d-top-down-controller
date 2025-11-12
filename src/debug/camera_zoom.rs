@@ -5,7 +5,7 @@ struct CameraZoomSensitivity(pub f32);
 
 impl Default for CameraZoomSensitivity {
     fn default() -> Self {
-        Self(0.005)
+        Self(0.0025)
     }
 }
 
