@@ -21,12 +21,13 @@ impl Plugin for CharacterControllerPlugin {
     }
 }
 
+#[derive(Clone, Copy)]
 pub enum Movement {
     Translation(Vec2),
     Rotation(f32),
 }
 
-// TODO: look into making this use `EntityEvent` rather than `Message`
+// TODO: look into making this use `EntityEvent` or observers rather than `Message`
 #[derive(Message)]
 pub struct ControllerMovement {
     movement: Movement,
@@ -54,8 +55,6 @@ fn controller_movement(
     mut movement_messages: MessageReader<ControllerMovement>,
 ) {
     for event in movement_messages.read() {
-        // PERF: This may be unnecessarily called multiple times per frame if one entity has
-        // multiple movement messages.
         // Related to the TODO above the ControllerMovement struct
         let (mut transform, mut velocity) = match controllers.get_mut(event.entity) {
             Ok(result) => result,
@@ -73,15 +72,21 @@ fn controller_movement(
     }
 }
 
-#[derive(Component, Deref, DerefMut)]
+#[derive(Component, Default, Deref, DerefMut, Clone, Copy)]
 pub struct Velocity(pub Vec2);
 
-impl Default for Velocity {
-    fn default() -> Self {
-        Self(Vec2::ZERO)
-    }
+// TODO: these lifetimes are kinda unnecessary since most of these types implement the Copy trait,
+// but oh well go fuck yourself
+#[derive(Clone)]
+struct CollideAndSlideData<'a> {
+    transform: Transform,
+    initial_velocity: Velocity,
+    collider: &'a Collider,
+    collision_layers: CollisionLayers,
+    fixed_delta_time: f32,
 }
 
+#[derive(Clone, Copy)]
 struct CollideAndSlideConfig {
     skin_width: f32,
     bounces: usize,
@@ -96,70 +101,87 @@ impl Default for CollideAndSlideConfig {
     }
 }
 
+fn collide_and_slide(
+    data: &CollideAndSlideData,
+    config: &CollideAndSlideConfig,
+    spatial_query_pipeline: &SpatialQueryPipeline,
+) -> Vec2 {
+    // Z-component of the XYZ rotation of the object
+    let collider_angle = data.transform.rotation.to_euler(EulerRot::XYZ).2;
+    let angle_unit_vector = vec2(collider_angle.cos(), collider_angle.sin());
+
+    let mut cast_origin = data.transform.translation.xy();
+    let mut cast_velocity = data.initial_velocity.0 * data.fixed_delta_time;
+    let mut result_velocity = Vec2::ZERO;
+
+    'bounces: for _ in 0..config.bounces {
+        let direction = match Dir2::new(cast_velocity) {
+            Ok(result) => result,
+            // HACK: If the velocity is zero, we set some dummy direction to satisfy the function
+            // call. Maybe we don't need to do this; the spatial query pipeline API might have a
+            // better function for this (I don't think it does).
+            Err(InvalidDirectionError::Zero) => Dir2::X,
+            Err(_) => panic!("cast velocity is either infinite or NaN"),
+        };
+
+        if let Some(hit) = spatial_query_pipeline.cast_shape(
+            data.collider,
+            cast_origin,
+            collider_angle,
+            direction,
+            &ShapeCastConfig {
+                max_distance: cast_velocity.length() + config.skin_width,
+                ..default()
+            },
+            &SpatialQueryFilter::from_mask(data.collision_layers.filters),
+        ) {
+            // Maximum distance the collider can move in the direction of the cast without
+            // hitting another entity.
+            let snap_to_surface =
+                cast_velocity.normalize_or_zero() * (hit.distance - config.skin_width).max(0.0);
+
+            if hit.distance > 0.0 {
+                // First, we move the collider as far as we can in the direction of the cast.
+                // Next, we reject the remaining velocity from the hit normal to get the new cast
+                // velocity (which is parallel to the surface that was hit).
+                result_velocity += snap_to_surface;
+                cast_origin += snap_to_surface;
+                cast_velocity = (cast_velocity - snap_to_surface).reject_from(hit.normal1);
+            } else {
+                // If the hit distance is 0.0 the shapes are colliding and we need to push the
+                // collider out by the penetration depth.
+                let world_hit = hit.point1;
+                let character_hit =
+                    hit.point2.rotate(angle_unit_vector) + data.transform.translation.xy();
+                result_velocity += world_hit - character_hit;
+            }
+        } else {
+            // No collision was detected, so we move the remaining distance and break the loop.
+            result_velocity += cast_velocity;
+            break 'bounces;
+        }
+    }
+
+    result_velocity
+}
+
 fn controller_collision_response(
     time: Res<Time<Fixed>>,
     spatial_query: Res<SpatialQueryPipeline>,
     mut controllers: Query<(&mut Transform, &Velocity, &Collider, &CollisionLayers)>,
 ) {
-    for (mut transform, velocity, collider, collision_layers) in &mut controllers {
-        let angle = transform.rotation.to_euler(EulerRot::XYZ).2;
-        let angle_unit_vector = vec2(angle.cos(), angle.sin());
-
-        let mut cast_origin = transform.translation.xy();
-        let mut cast_velocity = velocity.0 * time.delta_secs();
-        let mut delta_velocity = Vec2::ZERO;
-
+    for (mut transform, velocity, collider, layers) in &mut controllers {
+        let data = CollideAndSlideData {
+            transform: *transform,
+            initial_velocity: *velocity,
+            collider,
+            collision_layers: *layers,
+            fixed_delta_time: time.delta_secs(),
+        };
         let config = CollideAndSlideConfig::default();
 
-        // TODO: extract this into a separate function
-        'bounces: for _ in 0..config.bounces {
-            let direction = match Dir2::new(cast_velocity) {
-                Ok(result) => result,
-                // HACK: If the velocity is zero, we set some dummy direction to satisfy the function
-                // call. Maybe we don't need to do this; the spatial query pipeline API might have a
-                // better function for this (I don't think it does).
-                Err(InvalidDirectionError::Zero) => Dir2::X,
-                Err(_) => panic!("cast velocity is either infinite or NaN"),
-            };
+        let result_velocity = collide_and_slide(&data, &config, &spatial_query);
 
-            if let Some(hit) = spatial_query.cast_shape(
-                &collider,
-                cast_origin,
-                angle,
-                direction,
-                &ShapeCastConfig {
-                    max_distance: cast_velocity.length() + config.skin_width,
-                    ..default()
-                },
-                &SpatialQueryFilter::from_mask(collision_layers.filters),
-            ) {
-                // Maximum distance the collider can move in the direction of the cast without
-                // hitting another entity.
-                let snap_to_surface =
-                    cast_velocity.normalize_or_zero() * (hit.distance - config.skin_width).max(0.0);
-
-                // If the hit distance is 0 the shapes are colliding and we need to handle it
-                // separately.
-                if hit.distance > 0.0 {
-                    // Move collider as far as we can in the direction of the cast and calculate
-                    // remainder velocity for the next step.
-                    delta_velocity += snap_to_surface;
-                    cast_origin += snap_to_surface;
-                    cast_velocity = (cast_velocity - snap_to_surface).reject_from(hit.normal1);
-                } else {
-                    // Push the collider out by the penetration depth.
-                    let world_hit = hit.point1;
-                    let character_hit =
-                        hit.point2.rotate(angle_unit_vector) + transform.translation.xy();
-                    delta_velocity += world_hit - character_hit;
-                }
-            } else {
-                // No collision was detected, so we move the remaining distance and break the loop.
-                delta_velocity += cast_velocity;
-                break 'bounces;
-            }
-        }
-
-        transform.translation += delta_velocity.extend(0.0);
+        transform.translation += result_velocity.extend(0.0);
     }
 }
