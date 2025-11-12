@@ -2,7 +2,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    characters::{CharacterController, ControllerMovement, Velocity},
+    characters::{CharacterController, ControllerMovement},
     debug::CameraZoom,
     physics::{ObjectLayer, add_collision_layers},
 };
@@ -57,7 +57,6 @@ fn player_setup(
         MeshMaterial2d(materials.add(Color::srgb(0.0, 0.5, 1.0))),
         Transform::from_xyz(-50.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
-        Velocity::default(),
         Player::default(),
         CharacterController,
     ));

@@ -2,7 +2,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    characters::{CharacterController, ControllerMovement, Velocity},
+    characters::{CharacterController, ControllerMovement},
     physics::{ObjectLayer, add_collision_layers},
 };
 
@@ -46,7 +46,6 @@ fn other_character_setup(
         MeshMaterial2d(materials.add(Color::srgb(0.0, 1.0, 0.5))),
         Transform::from_xyz(50.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
-        Velocity::default(),
         OtherCharacter::default(),
         CharacterController,
     ));

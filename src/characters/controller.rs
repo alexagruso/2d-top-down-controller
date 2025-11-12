@@ -1,13 +1,22 @@
-// TODO: look into changing manual velocity/position movement to avian2d
-// linearvelocity/angularvelocity components
-// NOTE: link to paper outlining possible improvements to this algorithm:
+// NOTE: link to paper outlining possible improvements to this algorithm that would fix the
+// jittering when flat surfaces move along sharp corners:
 // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
 
 use avian2d::prelude::*;
 use bevy::{math::InvalidDirectionError, prelude::*};
 
 #[derive(Component)]
-#[require(Transform, Velocity, Collider, CollisionLayers)]
+#[require(
+    Transform,
+    // BUG: using ['LinearVelocity'] causes a one frame delay between the player moving and the
+    // mesh visually updating
+    LinearVelocity,
+    // We use ['RigidBody::Kinematic'] since collision responses for all controllers are handled
+    // manually.
+    RigidBody::Kinematic,
+    Collider,
+    CollisionLayers
+)]
 pub struct CharacterController;
 
 pub struct CharacterControllerPlugin;
@@ -22,7 +31,7 @@ impl Plugin for CharacterControllerPlugin {
 }
 
 #[derive(Clone, Copy)]
-pub enum Movement {
+pub enum MovementType {
     Translation(Vec2),
     Rotation(f32),
 }
@@ -30,32 +39,31 @@ pub enum Movement {
 // TODO: look into making this use `EntityEvent` or observers rather than `Message`
 #[derive(Message)]
 pub struct ControllerMovement {
-    movement: Movement,
+    movement: MovementType,
     entity: Entity,
 }
 
 impl ControllerMovement {
     pub fn from_translation(translation: Vec2, entity: Entity) -> Self {
         Self {
-            movement: Movement::Translation(translation),
+            movement: MovementType::Translation(translation),
             entity,
         }
     }
 
     pub fn from_rotation(angle: f32, entity: Entity) -> Self {
         Self {
-            movement: Movement::Rotation(angle),
+            movement: MovementType::Rotation(angle),
             entity,
         }
     }
 }
 
 fn controller_movement(
-    mut controllers: Query<(&mut Transform, &mut Velocity), With<CharacterController>>,
+    mut controllers: Query<(&mut Transform, &mut LinearVelocity), With<CharacterController>>,
     mut movement_messages: MessageReader<ControllerMovement>,
 ) {
     for event in movement_messages.read() {
-        // Related to the TODO above the ControllerMovement struct
         let (mut transform, mut velocity) = match controllers.get_mut(event.entity) {
             Ok(result) => result,
             Err(_) => {
@@ -66,21 +74,16 @@ fn controller_movement(
         };
 
         match event.movement {
-            Movement::Translation(delta_velocity) => velocity.0 = delta_velocity,
-            Movement::Rotation(angle) => transform.rotate_z(angle),
+            MovementType::Translation(delta_velocity) => velocity.0 = delta_velocity,
+            MovementType::Rotation(angle) => transform.rotate_z(angle),
         }
     }
 }
 
-#[derive(Component, Default, Deref, DerefMut, Clone, Copy)]
-pub struct Velocity(pub Vec2);
-
-// TODO: these lifetimes are kinda unnecessary since most of these types implement the Copy trait,
-// but oh well go fuck yourself
 #[derive(Clone)]
 struct CollideAndSlideData<'a> {
     transform: Transform,
-    initial_velocity: Velocity,
+    initial_velocity: LinearVelocity,
     collider: &'a Collider,
     collision_layers: CollisionLayers,
     fixed_delta_time: f32,
@@ -168,20 +171,22 @@ fn collide_and_slide(
 fn controller_collision_response(
     time: Res<Time<Fixed>>,
     spatial_query: Res<SpatialQueryPipeline>,
-    mut controllers: Query<(&mut Transform, &Velocity, &Collider, &CollisionLayers)>,
+    mut controllers: Query<(&mut LinearVelocity, &Transform, &Collider, &CollisionLayers)>,
 ) {
-    for (mut transform, velocity, collider, layers) in &mut controllers {
+    for (mut velocity, transform, collider, layers) in &mut controllers {
+        let fixed_delta_time = time.delta_secs();
         let data = CollideAndSlideData {
             transform: *transform,
             initial_velocity: *velocity,
             collider,
             collision_layers: *layers,
-            fixed_delta_time: time.delta_secs(),
+            fixed_delta_time,
         };
         let config = CollideAndSlideConfig::default();
 
         let result_velocity = collide_and_slide(&data, &config, &spatial_query);
-
-        transform.translation += result_velocity.extend(0.0);
+        // The result velocity is raw, and so we need to scale back up by delta time to work with
+        // avian's [`LinearVelocity`] component
+        **velocity = result_velocity / fixed_delta_time;
     }
 }
