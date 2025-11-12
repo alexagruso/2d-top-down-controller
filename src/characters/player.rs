@@ -1,17 +1,25 @@
+mod player_shader;
+
 use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    characters::{CharacterController, ControllerMovement},
+    characters::{
+        CharacterController, ControllerMovement,
+        player::player_shader::{PlayerShader, PlayerShaderPlugin},
+    },
     debug::CameraZoom,
     physics::{ObjectLayer, add_collision_layers},
 };
+
+const PLAYER_TEXTURE_PATH: &str = "textures/Face.png";
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_message::<ControllerMovement>()
+            .add_plugins(PlayerShaderPlugin)
             .add_systems(Startup, player_setup)
             .add_systems(Update, player_input)
             .add_systems(
@@ -43,18 +51,22 @@ impl Default for Player {
 fn player_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut materials: ResMut<Assets<PlayerShader>>,
+    assets: Res<AssetServer>,
 ) {
     use ObjectLayer as OL;
 
     commands.spawn((Camera2d, CameraZoom, PlayerCamera));
     commands.spawn((
-        Mesh2d(meshes.add(Capsule2d::new(35.0, 70.0))),
-        Collider::capsule(35.0, 70.0),
-        // Mesh2d(meshes.add(Circle::new(30.0))),
-        // Collider::circle(30.0),
+        // Mesh2d(meshes.add(Capsule2d::new(35.0, 70.0))),
+        // Collider::capsule(35.0, 70.0),
+        Mesh2d(meshes.add(Circle::new(30.0))),
+        Collider::circle(30.0),
         add_collision_layers(vec![OL::Player], vec![OL::Obstacle]),
-        MeshMaterial2d(materials.add(Color::srgb(0.0, 0.5, 1.0))),
+        MeshMaterial2d(materials.add(PlayerShader {
+            color: LinearRgba::RED,
+            texture: Some(assets.load(PLAYER_TEXTURE_PATH)),
+        })),
         Transform::from_xyz(-50.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
         Player::default(),
