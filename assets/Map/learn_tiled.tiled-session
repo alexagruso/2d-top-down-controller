@@ -1,0 +1,24 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "awd.tsx": {
+            "dynamicWrapping": true
+        }
+    },
+    "last.imagePath": "/home/alex/Documents/Projects/topdown_controller_2d/assets/textures",
+    "map.lastUsedFormat": "tmx",
+    "openFiles": [
+    ],
+    "project": "learn_tiled.tiled-project",
+    "recentFiles": [
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.type": 1
+}
