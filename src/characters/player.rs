@@ -68,10 +68,10 @@ fn player_setup(
             color: LinearRgba::WHITE,
             texture: Some(assets.load(PLAYER_TEXTURE_PATH)),
         })),
-        Transform::from_xyz(-50.0, 0.0, 0.0)
+        Transform::from_xyz(0.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
         Player::default(),
-        ViewCone::new(450.0, f32::to_radians(60.0)).with_minimum_ray_spacing(f32::to_radians(0.5)),
+        ViewCone::new(450.0, f32::to_radians(75.0)).with_minimum_ray_spacing(f32::to_radians(1.0)),
         CharacterController,
     ));
 }

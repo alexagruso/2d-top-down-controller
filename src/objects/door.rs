@@ -1,16 +1,14 @@
-mod door_shader;
+// TODO: make doors active only when the player is both near AND looking in its direction
 
-use avian2d::prelude::*;
+pub mod door_shader;
+
 use bevy::prelude::*;
 
-use crate::{
-    characters::CharacterController,
-    objects::door::door_shader::{DoorShader, DoorShaderPlugin},
-    physics::ObjectLayer,
-};
+use crate::{characters::CharacterController, objects::door_shader::DoorShaderPlugin};
 
 const DOOR_DEFAULT_FILL_COLOR: LinearRgba = LinearRgba::new(0.0, 0.0, 1.0, 1.0);
 const DOOR_DEFAULT_HIGHLIGHT_COLOR: LinearRgba = LinearRgba::new(0.0, 0.25, 1.0, 1.0);
+const DOOR_ACTIVATE_DISTANCE: f32 = 120.0;
 
 #[derive(Component)]
 #[component(storage = "SparseSet")]
@@ -25,15 +23,24 @@ pub struct DoorPlugin;
 impl Plugin for DoorPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DoorShaderPlugin)
-            .add_systems(Startup, setup_doors)
             .add_systems(FixedUpdate, update_doors);
     }
 }
 
 #[derive(Component)]
-struct Door {
+pub struct Door {
     fill_color: LinearRgba,
     highlight_color: LinearRgba,
+    open_offset: Vec2,
+}
+
+impl Door {
+    pub fn with_open_offset(self, open_offset: Vec2) -> Self {
+        Self {
+            open_offset,
+            ..self
+        }
+    }
 }
 
 impl Default for Door {
@@ -43,62 +50,19 @@ impl Default for Door {
             fill_color: DOOR_DEFAULT_FILL_COLOR,
             // Yellow, full opacity
             highlight_color: DOOR_DEFAULT_HIGHLIGHT_COLOR,
+            open_offset: Vec2::ZERO,
         }
     }
-}
-
-fn setup_doors(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<DoorShader>>,
-) {
-    use ObjectLayer as OL;
-
-    // TODO: look for a better way to get the entity id
-    let door_entity_id = commands
-        .spawn((
-            Mesh2d(meshes.add(Rectangle::new(15.0, 100.0))),
-            Transform::from_xyz(-20.0, 250.0, 0.0),
-            Collider::rectangle(15.0, 100.0),
-            CollisionLayers::new(
-                LayerMask(OL::Obstacle.to_bits()),
-                LayerMask(OL::None.to_bits()),
-            ),
-            Door::default(),
-        ))
-        .id();
-    commands.entity(door_entity_id).insert(MeshMaterial2d(
-        materials.add(DoorShader::new(door_entity_id)),
-    ));
-
-    let door_entity_id = commands
-        .spawn((
-            Mesh2d(meshes.add(Rectangle::new(15.0, 100.0))),
-            Transform::from_xyz(120.0, 250.0, 0.0),
-            Collider::rectangle(15.0, 100.0),
-            CollisionLayers::new(
-                LayerMask(OL::Obstacle.to_bits()),
-                LayerMask(OL::None.to_bits()),
-            ),
-            Door::default(),
-        ))
-        .id();
-    commands.entity(door_entity_id).insert(MeshMaterial2d(
-        materials.add(DoorShader::new(door_entity_id)),
-    ));
 }
 
 fn update_doors(
     controllers: Query<&Transform, With<CharacterController>>,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
-    mut doors: Query<
-        (&mut Transform, Entity, Has<DoorOpen>),
-        (With<Door>, Without<CharacterController>),
-    >,
+    mut doors: Query<(&mut Transform, &Door, Entity, Has<DoorOpen>), Without<CharacterController>>,
 ) {
-    for (mut door_transform, door_entity, is_open) in &mut doors {
-        let mut entity = commands.entity(door_entity);
+    for (mut door_transform, door, door_entity_id, is_open) in &mut doors {
+        let mut entity = commands.entity(door_entity_id);
 
         let mut door_is_near = false;
 
@@ -109,7 +73,7 @@ fn update_doors(
                 .translation
                 .xy()
                 .distance(door_transform.translation.xy())
-                <= 100.0
+                <= DOOR_ACTIVATE_DISTANCE
             {
                 door_is_near = true;
 
@@ -117,10 +81,10 @@ fn update_doors(
                 if keyboard.just_pressed(KeyCode::Space) {
                     if is_open {
                         entity.remove::<DoorOpen>();
-                        door_transform.translation.y -= 100.0;
+                        door_transform.translation -= door.open_offset.extend(0.0);
                     } else {
                         entity.insert(DoorOpen);
-                        door_transform.translation.y += 100.0;
+                        door_transform.translation += door.open_offset.extend(0.0);
                     }
                 }
             }
