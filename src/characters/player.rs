@@ -10,9 +10,10 @@ use crate::{
     },
     debug::CameraZoom,
     physics::{ObjectLayer, add_collision_layers},
+    view_cone::ViewCone,
 };
 
-const PLAYER_TEXTURE_PATH: &str = "textures/Face.png";
+const PLAYER_TEXTURE_PATH: &str = "textures/Waltuh.png";
 
 pub struct PlayerPlugin;
 
@@ -64,12 +65,13 @@ fn player_setup(
         Collider::circle(30.0),
         add_collision_layers(vec![OL::Player], vec![OL::Obstacle]),
         MeshMaterial2d(materials.add(PlayerShader {
-            color: LinearRgba::RED,
+            color: LinearRgba::WHITE,
             texture: Some(assets.load(PLAYER_TEXTURE_PATH)),
         })),
         Transform::from_xyz(-50.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
         Player::default(),
+        ViewCone::new(450.0, f32::to_radians(60.0)).with_minimum_ray_spacing(f32::to_radians(0.5)),
         CharacterController,
     ));
 }
