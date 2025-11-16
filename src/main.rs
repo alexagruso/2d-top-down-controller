@@ -10,7 +10,7 @@ fn main() {
             DefaultPlugins.build().disable::<LogPlugin>(),
             FrameTimeDiagnosticsPlugin::default(),
             PhysicsPlugins::default().with_length_unit(200.0),
-            // PhysicsDebugPlugin::default(),
+            PhysicsDebugPlugin::default(),
             GamePlugin,
         ))
         .run();

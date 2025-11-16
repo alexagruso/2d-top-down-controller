@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::world::{geometry::setup_geometry, level::setup_level};
+use crate::world::{geometry::setup_geometry, level::LevelLoadPlugin};
 
 mod geometry;
 mod level;
@@ -35,8 +35,12 @@ impl Default for WorldPlugin {
 impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
         match self.world_type {
-            WorldType::CustomGeometry => app.add_systems(Startup, setup_geometry),
-            WorldType::TiledLevel => app.add_systems(Startup, setup_level),
+            WorldType::CustomGeometry => {
+                app.add_systems(Startup, setup_geometry);
+            }
+            _ => {
+                app.add_plugins(LevelLoadPlugin);
+            }
         };
     }
 }
