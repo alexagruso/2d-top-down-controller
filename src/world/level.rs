@@ -1,8 +1,12 @@
+use avian2d::prelude::{Collider, CollisionLayers, LayerMask, PhysicsLayer};
 use bevy::prelude::*;
 
-use crate::world::{
-    geometry::rectangle_wall_bundle,
-    level_loader::{LevelConfig, LevelConfigPlugin},
+use crate::{
+    physics::ObjectLayer,
+    world::{
+        geometry::Wall,
+        level_loader::{LevelConfig, LevelConfigPlugin},
+    },
 };
 
 pub struct LevelLoadPlugin;
@@ -36,12 +40,12 @@ fn setup_level(assets: Res<AssetServer>, mut state: ResMut<State>) {
 }
 
 fn update_level(
+    assets: Res<AssetServer>,
     level_config_assets: Res<Assets<LevelConfig>>,
     mut state: ResMut<State>,
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut gizmos: Gizmos,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let level_config = level_config_assets.get(&state.level_config_handle);
 
@@ -50,13 +54,27 @@ fn update_level(
             if !state.spawned {
                 state.spawned = true;
 
+                let texture = assets.load("textures/MetalTextures.png");
+                let layout = TextureAtlasLayout::from_grid(uvec2(16, 16), 2, 3, None, None);
+                let atlas_layout = texture_atlas_layouts.add(layout);
+
                 for block in &config.blocks {
-                    commands.spawn(rectangle_wall_bundle(
-                        block.size,
-                        block.position,
-                        block.angle,
-                        &mut meshes,
-                        &mut materials,
+                    commands.spawn((
+                        Sprite::from_atlas_image(
+                            texture.clone(),
+                            TextureAtlas {
+                                layout: atlas_layout.clone(),
+                                index: block.sprite_id,
+                            },
+                        ),
+                        Transform::from_translation(block.position.extend(0.0))
+                            .with_rotation(Quat::from_rotation_z(f32::to_radians(block.angle))),
+                        Collider::rectangle(block.size.x, block.size.y),
+                        CollisionLayers::new(
+                            LayerMask(ObjectLayer::Obstacle.to_bits()),
+                            LayerMask(ObjectLayer::None.to_bits()),
+                        ),
+                        Wall,
                     ));
                 }
             }
@@ -66,3 +84,6 @@ fn update_level(
 
     gizmos.circle_2d(Vec2::ZERO, 10.0, Color::srgb(1.0, 0.0, 0.0));
 }
+
+#[derive(Bundle)]
+struct BlockBundle {}

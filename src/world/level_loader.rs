@@ -12,6 +12,7 @@ pub struct Block {
     pub position: Vec2,
     pub size: Vec2,
     pub angle: f32,
+    pub sprite_id: usize,
 }
 
 impl Block {
@@ -22,6 +23,7 @@ impl Block {
         let mut width: Option<f32> = None;
         let mut height: Option<f32> = None;
         let mut angle: f32 = 0.0;
+        let mut sprite_id: Option<usize> = None;
 
         for attr in node.attributes() {
             match attr.name() {
@@ -32,17 +34,21 @@ impl Block {
                 "height" => height = Some(attr.value().parse::<f32>().unwrap()),
                 // Tiled angle is opposite
                 "rotation" => angle = -attr.value().parse::<f32>().unwrap(),
+                "gid" => sprite_id = Some(attr.value().parse::<usize>().unwrap() - 1),
                 _ => {}
             }
         }
 
-        if let (Some(x), Some(y), Some(width), Some(height)) = (x, y, width, height) {
+        if let (Some(x), Some(y), Some(width), Some(height), Some(sprite_id)) =
+            (x, y, width, height, sprite_id)
+        {
             Ok(Block {
                 // Convert tiled corner coordinates to bevy center coordinates
                 position: vec2(x, y)
                     + rotate_vec2_radians(vec2(width, height) * 0.5, f32::to_radians(angle)),
                 size: vec2(width, height),
                 angle,
+                sprite_id,
             })
         } else {
             Err(())

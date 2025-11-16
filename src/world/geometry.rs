@@ -12,7 +12,7 @@ use crate::{
 const WALL_COLOR: Color = Color::srgb(0.5, 0.5, 0.5);
 
 #[derive(Component)]
-struct Wall;
+pub struct Wall;
 
 pub fn setup_geometry(
     mut commands: Commands,
@@ -158,7 +158,7 @@ pub fn setup_geometry(
     );
 }
 
-pub fn rectangle_wall_bundle(
+fn rectangle_wall_bundle(
     size: Vec2,
     position: Vec2,
     // Degrees
