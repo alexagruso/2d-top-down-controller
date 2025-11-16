@@ -96,7 +96,7 @@ fn cursor_to_camera_position(cursor_position: Vec2, window_size: Vec2) -> Vec2 {
     )
 }
 
-fn rotate_vec2_radians(v: Vec2, angle: f32) -> Vec2 {
+pub fn rotate_vec2_radians(v: Vec2, angle: f32) -> Vec2 {
     vec2(
         angle.cos() * v.x - angle.sin() * v.y,
         angle.sin() * v.x + angle.cos() * v.y,

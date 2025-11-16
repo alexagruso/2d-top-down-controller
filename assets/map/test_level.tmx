@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="1" nextlayerid="4" nextobjectid="108">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="32" tileheight="32" infinite="1" nextlayerid="4" nextobjectid="109">
  <tileset firstgid="1" name="test_tileset" tilewidth="32" tileheight="32" tilecount="4" columns="2">
   <image source="../textures/PlatformTextures.png" width="64" height="64"/>
  </tileset>
  <tileset firstgid="5" source="metal.tsx"/>
  <objectgroup id="3" name="FreePos">
-  <object id="79" gid="5" x="0.671617" y="-0.671617" width="16" height="16"/>
+  <object id="79" gid="5" x="-0.0287367" y="0.203825" width="16" height="16" rotation="45"/>
   <object id="80" gid="5" x="15.8469" y="-16.3889" width="16" height="16"/>
   <object id="81" gid="5" x="32.1062" y="-32.1062" width="16" height="16"/>
   <object id="82" gid="5" x="47.8235" y="-48.3655" width="16" height="16"/>
@@ -33,7 +33,7 @@
   <object id="104" gid="14" x="396.289" y="-351.616" width="16" height="16"/>
   <object id="105" gid="14" x="539.241" y="-452.13" width="16" height="16"/>
   <object id="106" gid="14" x="-65.5636" y="-211.545" width="278.383" height="77.5797"/>
-  <object id="107" gid="14" x="192.803" y="-12.0161" width="278.383" height="77.5797"/>
+  <object id="107" gid="14" x="206.104" y="-192.029" width="278.383" height="77.5797" rotation="45"/>
  </objectgroup>
  <layer id="1" name="Tile Layer 1" width="30" height="20">
   <data encoding="csv"/>

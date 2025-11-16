@@ -5,6 +5,8 @@ use bevy::{
 use roxmltree::{Document, Node};
 use thiserror::Error;
 
+use crate::view_cone::rotate_vec2_radians;
+
 #[derive(Default, Debug)]
 pub struct Block {
     pub position: Vec2,
@@ -37,7 +39,8 @@ impl Block {
         if let (Some(x), Some(y), Some(width), Some(height)) = (x, y, width, height) {
             Ok(Block {
                 // Convert tiled corner coordinates to bevy center coordinates
-                position: vec2(x + width * 0.5, y + height * 0.5),
+                position: vec2(x, y)
+                    + rotate_vec2_radians(vec2(width, height) * 0.5, f32::to_radians(angle)),
                 size: vec2(width, height),
                 angle,
             })
