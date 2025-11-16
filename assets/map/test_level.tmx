@@ -1,35 +1,44 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down"
-	width="30" height="20" tilewidth="32" tileheight="32" infinite="1" nextlayerid="4"
-	nextobjectid="197">
-	<tileset firstgid="1" source="metal.tsx" />
-	<objectgroup id="3" name="FreePos">
-		<object id="173" gid="1" x="0" y="0" width="16" height="16" />
-		<object id="174" gid="1" x="32" y="0" width="16" height="16" />
-		<object id="175" gid="1" x="64" y="0" width="16" height="16" />
-		<object id="176" gid="1" x="96" y="0" width="16" height="16" />
-		<object id="177" gid="2" x="0" y="32" width="16" height="16" />
-		<object id="178" gid="2" x="32" y="32" width="16" height="16" />
-		<object id="179" gid="2" x="64" y="32" width="16" height="16" />
-		<object id="180" gid="2" x="96" y="32" width="16" height="16" />
-		<object id="181" gid="3" x="0" y="64" width="16" height="16" />
-		<object id="182" gid="3" x="32" y="64" width="16" height="16" />
-		<object id="183" gid="3" x="96" y="64" width="16" height="16" />
-		<object id="184" gid="3" x="64" y="64" width="16" height="16" />
-		<object id="185" gid="4" x="0" y="96" width="16" height="16" />
-		<object id="186" gid="4" x="32" y="96" width="16" height="16" />
-		<object id="187" gid="4" x="64" y="96" width="16" height="16" />
-		<object id="188" gid="4" x="96" y="96" width="16" height="16" />
-		<object id="189" gid="5" x="0" y="128" width="16" height="16" />
-		<object id="190" gid="5" x="32" y="128" width="16" height="16" />
-		<object id="191" gid="5" x="64" y="128" width="16" height="16" />
-		<object id="192" gid="5" x="96" y="128" width="16" height="16" />
-		<object id="193" gid="6" x="0" y="160" width="16" height="16" />
-		<object id="194" gid="6" x="32" y="160" width="16" height="16" />
-		<object id="195" gid="6" x="96" y="160" width="16" height="16" />
-		<object id="196" gid="6" x="64" y="160" width="16" height="16" />
-	</objectgroup>
-	<layer id="1" name="Tile Layer 1" width="30" height="20">
-		<data encoding="csv" />
-	</layer>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="30" height="20" tilewidth="16" tileheight="16" infinite="1" nextlayerid="4" nextobjectid="210">
+ <tileset firstgid="1" source="metal.tsx"/>
+ <tileset firstgid="7" source="platform.tsx"/>
+ <objectgroup id="3" name="FreePos">
+  <object id="173" gid="1" x="0" y="0" width="16" height="16"/>
+  <object id="174" gid="1" x="32" y="0" width="16" height="16"/>
+  <object id="175" gid="1" x="64" y="0" width="16" height="16"/>
+  <object id="176" gid="1" x="96" y="0" width="16" height="16"/>
+  <object id="177" gid="2" x="0" y="32" width="16" height="16"/>
+  <object id="178" gid="2" x="32" y="32" width="16" height="16"/>
+  <object id="179" gid="2" x="64" y="32" width="16" height="16"/>
+  <object id="180" gid="2" x="96" y="32" width="16" height="16"/>
+  <object id="181" gid="3" x="0" y="64" width="16" height="16"/>
+  <object id="182" gid="3" x="32" y="64" width="16" height="16"/>
+  <object id="183" gid="3" x="96" y="64" width="16" height="16"/>
+  <object id="184" gid="3" x="64" y="64" width="16" height="16"/>
+  <object id="185" gid="4" x="0" y="96" width="16" height="16"/>
+  <object id="186" gid="4" x="32" y="96" width="16" height="16"/>
+  <object id="187" gid="4" x="64" y="96" width="16" height="16"/>
+  <object id="188" gid="4" x="96" y="96" width="16" height="16"/>
+  <object id="189" gid="5" x="0" y="128" width="16" height="16"/>
+  <object id="190" gid="5" x="32" y="128" width="16" height="16"/>
+  <object id="191" gid="5" x="64" y="128" width="16" height="16"/>
+  <object id="192" gid="5" x="96" y="128" width="16" height="16"/>
+  <object id="193" gid="6" x="0" y="160" width="16" height="16"/>
+  <object id="194" gid="6" x="32" y="160" width="16" height="16"/>
+  <object id="195" gid="6" x="96" y="160" width="16" height="16"/>
+  <object id="196" gid="6" x="64" y="160" width="16" height="16"/>
+  <object id="197" gid="7" x="128" y="0" width="16" height="16"/>
+  <object id="199" gid="8" x="160" y="0" width="16" height="16"/>
+  <object id="200" gid="8" x="192" y="0" width="16" height="16"/>
+  <object id="202" gid="8" x="176" y="0" width="16" height="16"/>
+  <object id="203" gid="8" x="144" y="0" width="16" height="16"/>
+  <object id="205" gid="9" x="208" y="0" width="16" height="16"/>
+  <object id="206" gid="10" x="256" y="0" width="16" height="16"/>
+  <object id="207" gid="10" x="304" y="0" width="16" height="16"/>
+  <object id="208" gid="10" x="352" y="0" width="16" height="16"/>
+  <object id="209" gid="10" x="400" y="0" width="16" height="16"/>
+ </objectgroup>
+ <layer id="1" name="Tile Layer 1" width="30" height="20">
+  <data encoding="csv"/>
+ </layer>
 </map>
