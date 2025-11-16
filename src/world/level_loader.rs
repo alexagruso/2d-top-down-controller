@@ -2,12 +2,54 @@ use bevy::{
     asset::{AssetLoader, LoadContext, io::Reader},
     prelude::*,
 };
-use serde::Deserialize;
+use roxmltree::{Document, Node};
 use thiserror::Error;
 
-#[derive(Asset, TypePath, Debug, Deserialize)]
+#[derive(Default, Debug)]
+pub struct Block {
+    pub position: Vec2,
+    pub size: Vec2,
+    pub angle: f32,
+}
+
+impl Block {
+    fn from_node(node: &Node) -> Result<Self, ()> {
+        // TODO: find a better way to do this.
+        let mut x: Option<f32> = None;
+        let mut y: Option<f32> = None;
+        let mut width: Option<f32> = None;
+        let mut height: Option<f32> = None;
+        let mut angle: f32 = 0.0;
+
+        for attr in node.attributes() {
+            match attr.name() {
+                "x" => x = Some(attr.value().parse::<f32>().unwrap()),
+                // Tiled Y-coordinate is opposite
+                "y" => y = Some(-attr.value().parse::<f32>().unwrap()),
+                "width" => width = Some(attr.value().parse::<f32>().unwrap()),
+                "height" => height = Some(attr.value().parse::<f32>().unwrap()),
+                // Tiled angle is opposite
+                "rotation" => angle = -attr.value().parse::<f32>().unwrap(),
+                _ => {}
+            }
+        }
+
+        if let (Some(x), Some(y), Some(width), Some(height)) = (x, y, width, height) {
+            Ok(Block {
+                // Convert tiled corner coordinates to bevy center coordinates
+                position: vec2(x + width * 0.5, y + height * 0.5),
+                size: vec2(width, height),
+                angle,
+            })
+        } else {
+            Err(())
+        }
+    }
+}
+
+#[derive(Asset, TypePath, Debug)]
 pub struct LevelConfig {
-    pub value: i32,
+    pub blocks: Vec<Block>,
 }
 
 // Needed for [`init_asset_loader`] type bound
@@ -19,8 +61,8 @@ struct LevelConfigLoader;
 enum LevelConfigLoaderError {
     #[error("Could not load asset: {0}")]
     Io(#[from] std::io::Error),
-    #[error("Could not parse RON: {0}")]
-    RonSpannedError(#[from] ron::error::SpannedError),
+    #[error("Could not parse XML: {0}")]
+    Xml(#[from] roxmltree::Error),
 }
 
 impl AssetLoader for LevelConfigLoader {
@@ -37,10 +79,21 @@ impl AssetLoader for LevelConfigLoader {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
 
-        println!("{}", String::from_utf8(bytes.clone()).unwrap());
+        let mut blocks = Vec::new();
 
-        let level_config = ron::de::from_bytes::<LevelConfig>(&bytes)?;
-        Ok(level_config)
+        let doc = Document::parse(str::from_utf8(&bytes[..]).unwrap())?;
+        for node in doc.descendants() {
+            if node.has_tag_name("objectgroup") {
+                for block_node in node.children() {
+                    match Block::from_node(&block_node) {
+                        Ok(block) => blocks.push(block),
+                        Err(_) => continue,
+                    }
+                }
+            }
+        }
+
+        Ok(LevelConfig { blocks })
     }
 
     fn extensions(&self) -> &[&str] {

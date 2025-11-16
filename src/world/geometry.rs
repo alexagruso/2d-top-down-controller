@@ -158,7 +158,7 @@ pub fn setup_geometry(
     );
 }
 
-fn rectangle_wall_bundle(
+pub fn rectangle_wall_bundle(
     size: Vec2,
     position: Vec2,
     // Degrees
