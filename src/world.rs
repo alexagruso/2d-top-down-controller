@@ -1,16 +1,17 @@
 use bevy::prelude::*;
 
-use crate::world::{geometry::setup_geometry, level::setup_omgo_level};
+use crate::world::{geometry::setup_geometry, level::setup_level};
 
 mod geometry;
 mod level;
+mod level_loader;
 
 #[allow(unused)]
 #[derive(Default)]
 pub enum WorldType {
     #[default]
     CustomGeometry,
-    OmgoLevel,
+    TiledLevel,
 }
 
 pub struct WorldPlugin {
@@ -35,7 +36,7 @@ impl Plugin for WorldPlugin {
     fn build(&self, app: &mut App) {
         match self.world_type {
             WorldType::CustomGeometry => app.add_systems(Startup, setup_geometry),
-            WorldType::OmgoLevel => app.add_systems(Startup, setup_omgo_level),
+            WorldType::TiledLevel => app.add_systems(Startup, setup_level),
         };
     }
 }

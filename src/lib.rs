@@ -26,7 +26,7 @@ impl Plugin for GamePlugin {
             ViewConePlugin,
             // OtherCharacterPlugin,
             PlayerPlugin,
-            WorldPlugin::new(WorldType::CustomGeometry),
+            WorldPlugin::new(WorldType::TiledLevel),
             DoorPlugin,
         ));
     }
