@@ -84,7 +84,7 @@ fn update_view_cones(
             let ray = (ray * length).clamp_length_max(view_cone.radius);
 
             gizmos.ray_2d(start, ray, Color::srgb(1.0, 0.0, 0.0));
-            gizmos.circle_2d(start + ray, 5.0, Color::srgb(1.0, 0.0, 0.0));
+            // gizmos.circle_2d(start + ray, 5.0, Color::srgb(1.0, 0.0, 0.0));
         }
     }
 }
@@ -96,6 +96,7 @@ fn cursor_to_camera_position(cursor_position: Vec2, window_size: Vec2) -> Vec2 {
     )
 }
 
+#[inline]
 pub fn rotate_vec2_radians(v: Vec2, angle: f32) -> Vec2 {
     vec2(
         angle.cos() * v.x - angle.sin() * v.y,

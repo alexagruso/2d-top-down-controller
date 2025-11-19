@@ -5,6 +5,7 @@ use crate::world::{geometry::setup_geometry, level::LevelLoadPlugin};
 mod geometry;
 mod level;
 mod level_loader;
+mod level_loader_entities;
 
 #[allow(unused)]
 #[derive(Default)]
@@ -38,7 +39,7 @@ impl Plugin for WorldPlugin {
             WorldType::CustomGeometry => {
                 app.add_systems(Startup, setup_geometry);
             }
-            _ => {
+            WorldType::TiledLevel => {
                 app.add_plugins(LevelLoadPlugin);
             }
         };

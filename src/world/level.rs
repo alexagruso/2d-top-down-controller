@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use avian2d::prelude::{Collider, CollisionLayers, LayerMask, PhysicsLayer};
 use bevy::prelude::*;
 
@@ -54,17 +56,41 @@ fn update_level(
             if !state.spawned {
                 state.spawned = true;
 
-                let texture = assets.load("textures/MetalTextures.png");
-                let layout = TextureAtlasLayout::from_grid(uvec2(16, 16), 2, 3, None, None);
-                let atlas_layout = texture_atlas_layouts.add(layout);
+                let mut textures: HashMap<&String, Handle<Image>> = HashMap::new();
+
+                for tileset in &config.tilesets {
+                    textures.insert(
+                        &tileset.source,
+                        assets.load(format!("textures/placeholders/{}.png", tileset.source)),
+                    );
+                }
+
+                let metal_texture = assets.load("textures/placeholders/metal.tsx.png");
+                let metal_texture_layout =
+                    TextureAtlasLayout::from_grid(uvec2(16, 16), 2, 3, None, None);
+                let platform_texture = assets.load("textures/placeholders/platform.tsx.png");
+                let platform_texture_layout =
+                    TextureAtlasLayout::from_grid(uvec2(16, 16), 5, 1, None, None);
+                let waltuh_texture = assets.load("textures/placeholders/waltuh.tsx.png");
+                let waltuh_texture_layout =
+                    TextureAtlasLayout::from_grid(uvec2(128, 128), 3, 3, None, None);
 
                 for block in &config.blocks {
+                    let (texture, layout) = match block.source.as_str() {
+                        "metal.tsx" => (metal_texture.clone(), metal_texture_layout.clone()),
+                        "platform.tsx" => {
+                            (platform_texture.clone(), platform_texture_layout.clone())
+                        }
+                        "waltuh.tsx" => (waltuh_texture.clone(), waltuh_texture_layout.clone()),
+                        _ => panic!("invalid asset path"),
+                    };
+
                     commands.spawn((
                         Sprite::from_atlas_image(
-                            texture.clone(),
+                            texture,
                             TextureAtlas {
-                                layout: atlas_layout.clone(),
-                                index: block.sprite_id,
+                                layout: texture_atlas_layouts.add(layout),
+                                index: block.atlas_index,
                             },
                         ),
                         Transform::from_translation(block.position.extend(0.0))

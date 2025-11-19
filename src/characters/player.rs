@@ -13,7 +13,7 @@ use crate::{
     view_cone::ViewCone,
 };
 
-const PLAYER_TEXTURE_PATH: &str = "textures/Waltuh.png";
+const PLAYER_TEXTURE_PATH: &str = "textures/placeholders/waltuh.png";
 
 pub struct PlayerPlugin;
 
@@ -71,7 +71,7 @@ fn player_setup(
         Transform::from_xyz(0.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
         Player::default(),
-        ViewCone::new(450.0, f32::to_radians(75.0)).with_minimum_ray_spacing(f32::to_radians(1.0)),
+        ViewCone::new(450.0, f32::to_radians(75.0)).with_minimum_ray_spacing(f32::to_radians(0.1)),
         CharacterController,
     ));
 }
