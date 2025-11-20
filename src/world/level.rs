@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use avian2d::prelude::{Collider, CollisionLayers, LayerMask, PhysicsLayer};
-use bevy::prelude::*;
+use bevy::{asset::LoadedFolder, prelude::*};
 
 use crate::{
     physics::ObjectLayer,
@@ -16,6 +16,7 @@ pub struct LevelLoadPlugin;
 #[derive(Resource)]
 struct State {
     level_config_handle: Handle<LevelConfig>,
+    folder_handle: Handle<LoadedFolder>,
     spawned: bool,
 }
 
@@ -23,6 +24,7 @@ impl Default for State {
     fn default() -> Self {
         Self {
             level_config_handle: Handle::default(),
+            folder_handle: Handle::default(),
             spawned: false,
         }
     }
@@ -39,17 +41,20 @@ impl Plugin for LevelLoadPlugin {
 
 fn setup_level(assets: Res<AssetServer>, mut state: ResMut<State>) {
     state.level_config_handle = assets.load("map/test_level.tmx");
+    state.folder_handle = assets.load_folder("levels/tilesets/*.tsx");
 }
 
 fn update_level(
     assets: Res<AssetServer>,
     level_config_assets: Res<Assets<LevelConfig>>,
+    folder: Res<Assets<LoadedFolder>>,
     mut state: ResMut<State>,
     mut commands: Commands,
     mut gizmos: Gizmos,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let level_config = level_config_assets.get(&state.level_config_handle);
+    let folder = folder.get(&state.folder_handle);
 
     match level_config {
         Some(config) => {
@@ -57,13 +62,6 @@ fn update_level(
                 state.spawned = true;
 
                 let mut textures: HashMap<&String, Handle<Image>> = HashMap::new();
-
-                for tileset in &config.tilesets {
-                    textures.insert(
-                        &tileset.source,
-                        assets.load(format!("textures/placeholders/{}.png", tileset.source)),
-                    );
-                }
 
                 let metal_texture = assets.load("textures/placeholders/metal.tsx.png");
                 let metal_texture_layout =

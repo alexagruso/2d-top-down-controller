@@ -1,7 +1,10 @@
 use avian2d::prelude::*;
 use bevy::{prelude::*, window::PrimaryWindow};
 
-use crate::debug::CameraZoom;
+use crate::{
+    debug::CameraZoom,
+    math::{rotate_vec2_radians, window_to_viewport_position},
+};
 
 #[derive(Component)]
 pub struct ViewCone {
@@ -52,7 +55,7 @@ fn update_view_cones(
     };
 
     let cursor_offset = match window.cursor_position() {
-        Some(position) => cursor_to_camera_position(position, window.size()),
+        Some(position) => window_to_viewport_position(position, window.size()),
         // TODO: make this cache the cursor position so the laser can be drawn even if the cursor
         // is outside of the window
         None => return,
@@ -87,19 +90,4 @@ fn update_view_cones(
             // gizmos.circle_2d(start + ray, 5.0, Color::srgb(1.0, 0.0, 0.0));
         }
     }
-}
-
-fn cursor_to_camera_position(cursor_position: Vec2, window_size: Vec2) -> Vec2 {
-    vec2(
-        cursor_position.x - window_size.x / 2.0,
-        -cursor_position.y + window_size.y / 2.0,
-    )
-}
-
-#[inline]
-pub fn rotate_vec2_radians(v: Vec2, angle: f32) -> Vec2 {
-    vec2(
-        angle.cos() * v.x - angle.sin() * v.y,
-        angle.sin() * v.x + angle.cos() * v.y,
-    )
 }

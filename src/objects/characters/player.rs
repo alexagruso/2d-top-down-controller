@@ -1,24 +1,24 @@
 mod player_shader;
 
+pub use player_shader::*;
+
 use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    characters::{
-        CharacterController, ControllerMovement,
-        player::player_shader::{PlayerShader, PlayerShaderPlugin},
-    },
     debug::CameraZoom,
+    objects::characters::{CharacterController, ControllerMovement},
     physics::{ObjectLayer, add_collision_layers},
     view_cone::ViewCone,
 };
 
-const PLAYER_TEXTURE_PATH: &str = "textures/placeholders/waltuh.png";
+const PLAYER_TEXTURE_PATH: &str = "textures/placeholders/waltuh.tsx.png";
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
+        // TODO: move this message to the controller plugin
         app.add_message::<ControllerMovement>()
             .add_plugins(PlayerShaderPlugin)
             .add_systems(Startup, player_setup)

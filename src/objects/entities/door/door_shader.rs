@@ -4,9 +4,9 @@ use bevy::{
     sprite_render::{Material2d, Material2dPlugin},
 };
 
-use crate::{
+use crate::objects::{
     characters::Player,
-    objects::door::{DOOR_DEFAULT_FILL_COLOR, Door, DoorIsNear},
+    entities::{DOOR_DEFAULT_FILL_COLOR, Door, DoorIsNear},
 };
 
 const DOOR_SHADER_PATH: &str = "shaders/door.wgsl";

@@ -7,7 +7,7 @@ use bevy::{
 use roxmltree::{Document, Node};
 use thiserror::Error;
 
-use crate::view_cone::rotate_vec2_radians;
+use crate::math::rotate_vec2_radians;
 
 #[derive(Debug)]
 pub struct Tileset {

@@ -5,7 +5,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    objects::{Door, door_shader::DoorShader},
+    objects::entities::{Door, DoorShader},
     physics::ObjectLayer,
 };
 

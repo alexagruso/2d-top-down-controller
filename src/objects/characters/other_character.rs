@@ -2,7 +2,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    characters::{CharacterController, ControllerMovement},
+    objects::characters::{CharacterController, ControllerMovement},
     physics::{ObjectLayer, add_collision_layers},
 };
 

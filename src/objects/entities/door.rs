@@ -1,22 +1,24 @@
 // TODO: make doors active only when the player is both near AND looking in its direction
 
-pub mod door_shader;
+mod door_shader;
+
+pub use door_shader::*;
 
 use bevy::prelude::*;
 
-use crate::{characters::CharacterController, objects::door_shader::DoorShaderPlugin};
+use crate::objects::characters::CharacterController;
 
-const DOOR_DEFAULT_FILL_COLOR: LinearRgba = LinearRgba::new(0.0, 0.0, 1.0, 1.0);
-const DOOR_DEFAULT_HIGHLIGHT_COLOR: LinearRgba = LinearRgba::new(0.0, 0.25, 1.0, 1.0);
-const DOOR_ACTIVATE_DISTANCE: f32 = 120.0;
-
-#[derive(Component)]
-#[component(storage = "SparseSet")]
-struct DoorOpen;
+pub const DOOR_DEFAULT_FILL_COLOR: LinearRgba = LinearRgba::new(0.0, 0.0, 1.0, 1.0);
+pub const DOOR_DEFAULT_HIGHLIGHT_COLOR: LinearRgba = LinearRgba::new(0.0, 0.25, 1.0, 1.0);
+pub const DOOR_ACTIVATE_DISTANCE: f32 = 120.0;
 
 #[derive(Component)]
 #[component(storage = "SparseSet")]
-struct DoorIsNear;
+pub struct DoorOpen;
+
+#[derive(Component)]
+#[component(storage = "SparseSet")]
+pub struct DoorIsNear;
 
 pub struct DoorPlugin;
 
