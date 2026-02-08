@@ -1,18 +1,23 @@
 mod player_shader;
 
+use std::f32::consts::PI;
+
 pub use player_shader::*;
 
 use avian2d::prelude::*;
-use bevy::prelude::*;
+use bevy::{prelude::*, window::PrimaryWindow};
 
 use crate::{
     debug::CameraZoom,
-    objects::characters::{CharacterController, ControllerMovement},
-    physics::{ObjectLayer, add_collision_layers},
-    view_cone::ViewCone,
+    objects::{
+        characters::{CharacterController, ControllerMovement},
+        entities::DoorMessage,
+    },
+    physics::{ObjectLayer, object_collision_layers},
+    sector::{Sector, SectorTrigger},
 };
 
-const PLAYER_TEXTURE_PATH: &str = "textures/placeholders/waltuh.tsx.png";
+const PLAYER_TEXTURE_PATH: &str = "textures/placeholders/topdown.png";
 
 pub struct PlayerPlugin;
 
@@ -22,9 +27,17 @@ impl Plugin for PlayerPlugin {
         app.add_message::<ControllerMovement>()
             .add_plugins(PlayerShaderPlugin)
             .add_systems(Startup, player_setup)
-            .add_systems(Update, player_input)
             .add_systems(
-                // PostUpdate prevents the camera from visually lagging behind the player
+                Update,
+                (
+                    player_input,
+                    rotate_player,
+                    animate_sprite::<PlayerLegs>.run_if(player_is_moving),
+                ),
+            )
+            .add_systems(
+                // FixedPostUpdate prevents the camera from visually lagging behind the player
+                // BUG: no it doesn't
                 FixedPostUpdate,
                 camera_tracking,
             );
@@ -33,6 +46,9 @@ impl Plugin for PlayerPlugin {
 
 #[derive(Component)]
 struct PlayerCamera;
+
+#[derive(Component)]
+struct PlayerLegs;
 
 #[derive(Component)]
 pub struct Player {
@@ -49,30 +65,101 @@ impl Default for Player {
     }
 }
 
+#[derive(Component)]
+struct AnimationIndices {
+    first: usize,
+    last: usize,
+}
+
+#[derive(Component, Deref, DerefMut)]
+struct AnimationTimer(Timer);
+
+fn animate_sprite<Marker: Component>(
+    time: Res<Time>,
+    mut animations: Query<(&mut Sprite, &mut AnimationTimer, &AnimationIndices), With<Marker>>,
+) {
+    for (mut sprite, mut timer, indices) in &mut animations {
+        timer.tick(time.delta());
+
+        if timer.just_finished()
+            && let Some(atlas) = &mut sprite.texture_atlas
+        {
+            if atlas.index == indices.last {
+                atlas.index = indices.first;
+            } else {
+                atlas.index += 1;
+            }
+        }
+    }
+}
+
+fn player_is_moving(player_velocity: Query<&LinearVelocity, With<Player>>) -> bool {
+    player_velocity
+        .single()
+        .expect("Should always be a player")
+        .xy()
+        != Vec2::ZERO
+}
+
 fn player_setup(
+    assets: Res<AssetServer>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<PlayerShader>>,
-    assets: Res<AssetServer>,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
 ) {
-    use ObjectLayer as OL;
+    let texture = assets.load(PLAYER_TEXTURE_PATH);
+    let layout = TextureAtlasLayout::from_grid(UVec2::splat(32), 20, 2, None, None);
+    let texture_atlas_layout = texture_atlas_layouts.add(layout);
+
+    let player_indices = AnimationIndices {
+        first: 20,
+        last: 20,
+    };
+    let leg_indices = AnimationIndices { first: 0, last: 19 };
 
     commands.spawn((Camera2d, CameraZoom, PlayerCamera));
     commands.spawn((
-        // Mesh2d(meshes.add(Capsule2d::new(35.0, 70.0))),
-        // Collider::capsule(35.0, 70.0),
-        Mesh2d(meshes.add(Circle::new(30.0))),
-        Collider::circle(30.0),
-        add_collision_layers(vec![OL::Player], vec![OL::Obstacle]),
-        MeshMaterial2d(materials.add(PlayerShader {
-            color: LinearRgba::WHITE,
-            texture: Some(assets.load(PLAYER_TEXTURE_PATH)),
-        })),
+        Sprite {
+            image: texture.clone(),
+            texture_atlas: Some(TextureAtlas {
+                layout: texture_atlas_layout.clone(),
+                index: player_indices.first,
+            }),
+            // TODO: find a better way of scaling sprites up
+            custom_size: Some(Vec2::splat(75.0)),
+            ..default()
+        },
+        Collider::circle(15.0),
+        object_collision_layers(
+            vec![ObjectLayer::Player],
+            vec![ObjectLayer::Obstacle, ObjectLayer::Door],
+        ),
         Transform::from_xyz(0.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
+        // .with_scale(Vec2::splat(3.0).extend(0.0)),
         Player::default(),
-        ViewCone::new(450.0, f32::to_radians(75.0)).with_minimum_ray_spacing(f32::to_radians(0.1)),
         CharacterController,
+        children![
+            (
+                SectorTrigger::<DoorMessage>::new(Sector::new(75.0, PI * 0.35, 0.0, 8.0))
+                    .with_mask(LayerMask(ObjectLayer::Door.to_bits()))
+                    .into_bundle(&mut meshes),
+            ),
+            (
+                PlayerLegs,
+                Sprite {
+                    image: texture,
+                    texture_atlas: Some(TextureAtlas {
+                        layout: texture_atlas_layout,
+                        index: leg_indices.first,
+                    }),
+                    custom_size: Some(Vec2::splat(75.0)),
+                    ..default()
+                },
+                leg_indices,
+                AnimationTimer(Timer::from_seconds(0.05, TimerMode::Repeating)),
+            )
+        ],
     ));
 }
 
@@ -98,24 +185,49 @@ fn player_input(
         velocity.y -= player.speed;
     }
 
-    if key_input.pressed(KeyCode::KeyQ) {
-        player_movement_event.write(ControllerMovement::from_rotation(
-            2.0_f32.to_radians(),
-            entity,
-        ));
-    }
-    if key_input.pressed(KeyCode::KeyE) {
-        player_movement_event.write(ControllerMovement::from_rotation(
-            -2.0_f32.to_radians(),
-            entity,
-        ));
-    }
-
     if key_input.pressed(KeyCode::ShiftLeft) {
         velocity *= player.run_multiplier;
     }
 
     player_movement_event.write(ControllerMovement::from_translation(velocity, entity));
+}
+
+fn rotate_player(
+    window: Single<&Window, With<PrimaryWindow>>,
+    camera: Single<(&Camera, &GlobalTransform), With<PlayerCamera>>,
+    player_velocity: Query<&LinearVelocity, With<Player>>,
+    mut legs_sprite: Query<(&mut Sprite, &AnimationIndices), With<PlayerLegs>>,
+    // These have to be separate queries so that `Without` works
+    mut player_transform: Query<&mut Transform, With<Player>>,
+    mut legs_transform: Query<&mut Transform, (With<PlayerLegs>, Without<Player>)>,
+) -> Result {
+    let (camera, camera_transform) = camera.into_inner();
+    let cursor_world_position = match window.cursor_position() {
+        Some(viewport_position) => camera
+            .viewport_to_world_2d(camera_transform, viewport_position)
+            .expect("Viewport to world conversion should never fail"),
+        None => return Ok(()),
+    };
+
+    let mut player_transform = player_transform.single_mut()?;
+    let mut legs_transform = legs_transform.single_mut()?;
+
+    let player_position = player_transform.translation.xy();
+    let player_angle = Vec2::X.angle_to(cursor_world_position - player_position);
+    player_transform.rotation = Quat::from_rotation_z(player_angle);
+
+    let player_velocity = player_velocity.single().expect("Always a player legs").xy();
+    if player_velocity != Vec2::ZERO {
+        legs_transform.rotation = Quat::from_rotation_z(player_velocity.to_angle() - player_angle);
+    } else {
+        let (mut sprite, indices) = legs_sprite.single_mut()?;
+        legs_transform.rotation = Quat::from_rotation_z(0.0);
+        if let Some(atlas) = &mut sprite.texture_atlas {
+            atlas.index = indices.first;
+        }
+    }
+
+    Ok(())
 }
 
 // TODO: move this to a better place

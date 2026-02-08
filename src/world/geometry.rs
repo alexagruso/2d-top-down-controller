@@ -198,7 +198,7 @@ fn spawn_door(
                 .with_rotation(Quat::from_rotation_z(f32::to_radians(angle))),
             Collider::rectangle(size.x, size.y),
             CollisionLayers::new(
-                LayerMask(ObjectLayer::Obstacle.to_bits()),
+                LayerMask(ObjectLayer::Door.to_bits()),
                 LayerMask(ObjectLayer::None.to_bits()),
             ),
             Door::default().with_open_offset(open_offset),

@@ -7,9 +7,11 @@ pub enum ObjectLayer {
     None,
     Obstacle,
     Player,
+    Door,
 }
 
-pub fn add_collision_layers(
+/// Awd
+pub fn object_collision_layers(
     member_of: Vec<ObjectLayer>,
     collides_with: Vec<ObjectLayer>,
 ) -> impl Bundle {

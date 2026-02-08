@@ -7,7 +7,17 @@ fn main() {
         .insert_resource(Time::<Fixed>::from_hz(60.0))
         .add_plugins((
             // Prevents non-error bevy engine logs from printing to the console.
-            DefaultPlugins.build().disable::<LogPlugin>(),
+            DefaultPlugins
+                .build()
+                .disable::<LogPlugin>()
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: String::from("Crunch"),
+                        ..default()
+                    }),
+                    ..default()
+                })
+                .set(ImagePlugin::default_nearest()),
             FrameTimeDiagnosticsPlugin::default(),
             PhysicsPlugins::default().with_length_unit(200.0),
             // PhysicsDebugPlugin::default(),

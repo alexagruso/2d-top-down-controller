@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 use crate::{
     objects::characters::{CharacterController, ControllerMovement},
-    physics::{ObjectLayer, add_collision_layers},
+    physics::{ObjectLayer, object_collision_layers},
 };
 
 pub struct OtherCharacterPlugin;
@@ -42,7 +42,7 @@ fn other_character_setup(
         Collider::capsule(35.0, 70.0),
         // Mesh2d(meshes.add(Circle::new(30.0))),
         // Collider::circle(30.0),
-        add_collision_layers(vec![OL::Player], vec![OL::Obstacle]),
+        object_collision_layers(vec![OL::Player], vec![OL::Obstacle]),
         MeshMaterial2d(materials.add(Color::srgb(0.0, 1.0, 0.5))),
         Transform::from_xyz(50.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),

@@ -2,14 +2,16 @@
 
 use crate::{
     debug::DebugPlugin,
-    objects::ObjectPlugin,
-    view_cone::ViewConePlugin,
+    objects::{ObjectPlugin, entities::DoorMessage},
+    sector::SectorPlugin,
     world::{WorldPlugin, WorldType},
 };
 use bevy::prelude::*;
 
 pub mod debug;
+pub mod mouse_cache;
 pub mod physics;
+pub mod sector;
 pub mod view_cone;
 pub mod world;
 
@@ -43,42 +45,45 @@ pub mod objects {
 pub mod math {
     use bevy::prelude::*;
 
-    /// Converts a window position (top-left as origin, right-down as positive axes) to
-    /// a viewport position (center as origin, right-up as positive axes)
+    /// Rotates a vector counter-clockwise about the origin by a given angle in radians.
     ///
-    /// * `position` - Window position to be converted
-    /// * `viewport_size` - Size of the viewport
+    /// * `v` - Vector to be rotated
+    /// * `angle` - Angle in radians to rotate the vector by
     #[inline]
-    pub fn window_to_viewport_position(position: Vec2, viewport_size: Vec2) -> Vec2 {
+    pub fn rotate_vec2(v: Vec2, angle: f32) -> Vec2 {
         vec2(
-            position.x - viewport_size.x / 2.0,
-            -position.y + viewport_size.y / 2.0,
+            angle.cos() * v.x - angle.sin() * v.y,
+            angle.sin() * v.x + angle.cos() * v.y,
         )
     }
 
-    /// Rotates a vector counter-clockwise by a given angle in radians.
+    /// Rotates a vector counter-clockwise about the origin by a given angle in degrees.
     ///
     /// * `v` - Vector to be rotated
-    /// * `radians` - Angle to rotate the vector by
+    /// * `angle` - Angle in degrees to rotate the vector by
     #[inline]
-    pub fn rotate_vec2_radians(v: Vec2, radians: f32) -> Vec2 {
-        vec2(
-            radians.cos() * v.x - radians.sin() * v.y,
-            radians.sin() * v.x + radians.cos() * v.y,
-        )
+    pub fn rotate_vec2_degrees(v: Vec2, angle: f32) -> Vec2 {
+        rotate_vec2(v, angle.to_radians())
     }
 
-    /// Rotates a vector counter-clockwise by a given angle in degrees.
+    /// Rotates a vector counter-clockwise about a given point by a given angle in radians.
     ///
     /// * `v` - Vector to be rotated
-    /// * `degrees` - Angle to rotate the vector by
+    /// * `center` - Point to rotate about
+    /// * `angle` - Angle in radians to rotate the vector by
     #[inline]
-    pub fn rotate_vec2_degrees(v: Vec2, degrees: f32) -> Vec2 {
-        let radians = degrees.to_radians();
-        vec2(
-            radians.cos() * v.x - radians.sin() * v.y,
-            radians.sin() * v.x + radians.cos() * v.y,
-        )
+    pub fn rotate_vec2_about(v: Vec2, center: Vec2, angle: f32) -> Vec2 {
+        rotate_vec2(v - center, angle) + center
+    }
+
+    /// Rotates a vector counter-clockwise about a given point by a given angle in degrees.
+    ///
+    /// * `v` - Vector to be rotated
+    /// * `center` - Point to rotate about
+    /// * `angle` - Angle in degrees to rotate the vector by
+    #[inline]
+    pub fn rotate_vec2_about_degrees(v: Vec2, center: Vec2, angle: f32) -> Vec2 {
+        rotate_vec2(v - center, angle.to_radians()) + center
     }
 }
 
@@ -91,7 +96,8 @@ impl Plugin for GamePlugin {
         app.add_plugins((
             DebugPlugin,
             ObjectPlugin,
-            ViewConePlugin,
+            // TODO: implement door message
+            SectorPlugin::<DoorMessage>::default(),
             WorldPlugin::new(WorldType::CustomGeometry),
         ));
     }
