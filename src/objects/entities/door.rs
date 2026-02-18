@@ -72,6 +72,7 @@ impl Default for DoorColors {
 pub struct Door {
     fill_color: LinearRgba,
     focus_color: LinearRgba,
+    offset: Vec2,
 }
 
 impl Door {
@@ -84,28 +85,28 @@ impl Door {
     }
 }
 
-// Holds information about the animation we programmatically create.
-pub struct AnimationInfo {
-    // The name of the animation target (in this case, the text).
-    target_name: Name,
-    // The ID of the animation target, derived from the name.
-    target_id: AnimationTargetId,
-    // The animation graph asset.
-    graph: Handle<AnimationGraph>,
-    // The index of the node within that graph.
-    node_index: AnimationNodeIndex,
-}
+// // Holds information about the animation we programmatically create.
+// pub struct AnimationInfo {
+//     // The name of the animation target (in this case, the text).
+//     target_name: Name,
+//     // The ID of the animation target, derived from the name.
+//     target_id: AnimationTargetId,
+//     // The animation graph asset.
+//     graph: Handle<AnimationGraph>,
+//     // The index of the node within that graph.
+//     node_index: AnimationNodeIndex,
+// }
 
-impl AnimationInfo {
-    fn create() -> AnimationInfo {
-        
-    }
-}
-
-
-fn spawn_door() -> impl Bundle {
-    let AnimationInfo
-}
+// impl AnimationInfo {
+//     fn create() -> AnimationInfo {
+//
+//     }
+// }
+//
+//
+// fn spawn_door() -> impl Bundle {
+//     let AnimationInfo
+// }
 
 fn update_doors(
     keyboard: Res<ButtonInput<KeyCode>>,

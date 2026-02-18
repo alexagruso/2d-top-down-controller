@@ -187,6 +187,7 @@ fn rectangle_wall_bundle(
 fn spawn_door(
     size: Vec2,
     position: Vec2,
+    open_offset: Vec2,
     // Degrees
     angle: f32,
     door_colors: &Res<DoorColors>,

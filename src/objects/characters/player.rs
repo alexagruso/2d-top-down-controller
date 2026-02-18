@@ -149,14 +149,13 @@ fn player_setup(
             custom_size: Some(Vec2::splat(75.0)),
             ..default()
         },
-        Collider::circle(15.0),
+        Collider::capsule(10.0, 25.0),
         object_collision_layers(
             vec![ObjectLayer::Player],
             vec![ObjectLayer::Obstacle, ObjectLayer::Door],
         ),
         Transform::from_xyz(0.0, 0.0, 0.0)
             .with_rotation(Quat::from_rotation_z(f32::to_radians(0.0))),
-        // .with_scale(Vec2::splat(3.0).extend(0.0)),
         Player::default(),
         CharacterController,
         children![
