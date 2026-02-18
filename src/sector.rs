@@ -72,7 +72,6 @@ impl Sector {
     }
 }
 
-// TODO: implement a derive macro for this
 // TODO: rename this to a more general message trait
 pub trait SectorMessage: Send + Sync + Message + From<Entity> + 'static {} // Plus L plus Ratio
 

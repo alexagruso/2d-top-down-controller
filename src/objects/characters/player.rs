@@ -1,6 +1,6 @@
 mod player_shader;
 
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Duration};
 
 pub use player_shader::*;
 
@@ -35,12 +35,7 @@ impl Plugin for PlayerPlugin {
                     animate_sprite::<PlayerLegs>.run_if(player_is_moving),
                 ),
             )
-            .add_systems(
-                // FixedPostUpdate prevents the camera from visually lagging behind the player
-                // BUG: no it doesn't
-                FixedPostUpdate,
-                camera_tracking,
-            );
+            .add_systems(FixedPostUpdate, camera_tracking);
     }
 }
 
@@ -74,8 +69,29 @@ struct AnimationIndices {
 #[derive(Component, Deref, DerefMut)]
 struct AnimationTimer(Timer);
 
+#[derive(Resource)]
+struct AnimationTweenerThingy {
+    factor: f32,
+    constant: f32,
+}
+
+impl AnimationTweenerThingy {
+    fn new(v1: f32, v2: f32, t1: f32, t2: f32) -> Self {
+        let constant: f32 = (v2 * t2 - v1 * t1) / (v2 - v1);
+        let factor: f32 = v1 * (t1 - constant);
+
+        Self { factor, constant }
+    }
+
+    fn apply(&self, speed: f32) -> f32 {
+        self.factor / speed + self.constant
+    }
+}
+
+// TODO: this shouldn't really need to be general, remove the Marker type
 fn animate_sprite<Marker: Component>(
     time: Res<Time>,
+    player_velocity: Single<&LinearVelocity, With<Player>>,
     mut animations: Query<(&mut Sprite, &mut AnimationTimer, &AnimationIndices), With<Marker>>,
 ) {
     for (mut sprite, mut timer, indices) in &mut animations {
@@ -90,6 +106,10 @@ fn animate_sprite<Marker: Component>(
                 atlas.index += 1;
             }
         }
+
+        let frame_time =
+            AnimationTweenerThingy::new(100.0, 250.0, 0.05, 0.035).apply(player_velocity.length());
+        timer.set_duration(Duration::from_secs_f32(frame_time));
     }
 }
 
@@ -157,7 +177,7 @@ fn player_setup(
                     ..default()
                 },
                 leg_indices,
-                AnimationTimer(Timer::from_seconds(0.05, TimerMode::Repeating)),
+                AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
             )
         ],
     ));
@@ -197,7 +217,7 @@ fn rotate_player(
     camera: Single<(&Camera, &GlobalTransform), With<PlayerCamera>>,
     player_velocity: Query<&LinearVelocity, With<Player>>,
     mut legs_sprite: Query<(&mut Sprite, &AnimationIndices), With<PlayerLegs>>,
-    // These have to be separate queries so that `Without` works
+    // The QueryData type must be the same for Without to work
     mut player_transform: Query<&mut Transform, With<Player>>,
     mut legs_transform: Query<&mut Transform, (With<PlayerLegs>, Without<Player>)>,
 ) -> Result {
@@ -216,8 +236,9 @@ fn rotate_player(
     let player_angle = Vec2::X.angle_to(cursor_world_position - player_position);
     player_transform.rotation = Quat::from_rotation_z(player_angle);
 
-    let player_velocity = player_velocity.single().expect("Always a player legs").xy();
+    let player_velocity = player_velocity.single()?.xy();
     if player_velocity != Vec2::ZERO {
+        // De-rotate by player angle then rotate according to velocity
         legs_transform.rotation = Quat::from_rotation_z(player_velocity.to_angle() - player_angle);
     } else {
         let (mut sprite, indices) = legs_sprite.single_mut()?;

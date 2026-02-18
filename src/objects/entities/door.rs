@@ -1,36 +1,33 @@
-// TODO: rename the shitty functions in here
-
 mod door_shader;
 
+use derive::SectorMessage;
 pub use door_shader::*;
 
-use bevy::prelude::*;
+use bevy::{animation::AnimationTargetId, prelude::*};
 
 use crate::{objects::characters::CharacterController, sector::SectorMessage};
 
-pub const DOOR_DEFAULT_FILL_COLOR: LinearRgba = LinearRgba::new(0.0, 0.0, 1.0, 1.0);
-pub const DOOR_DEFAULT_HIGHLIGHT_COLOR: LinearRgba = LinearRgba::new(0.0, 0.25, 1.0, 1.0);
+#[derive(Component)]
+#[component(storage = "SparseSet")]
+pub struct DoorIsOpen;
 
 #[derive(Component)]
 #[component(storage = "SparseSet")]
-pub struct DoorOpen;
-
-#[derive(Component)]
-#[component(storage = "SparseSet")]
-pub struct DoorIsNear;
+pub struct DoorIsFocused;
 
 pub struct DoorPlugin;
 
 impl Plugin for DoorPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DoorShaderPlugin)
+            .init_resource::<DoorColors>()
             .add_message::<DoorMessage>()
-            .add_systems(FixedUpdate, (update_doors, update_door_status_from_message));
+            .add_systems(Update, update_doors)
+            .add_systems(FixedUpdate, read_door_focused_message);
     }
 }
 
-// TODO: Actually implement this
-#[derive(Message)]
+#[derive(Message, SectorMessage)]
 pub struct DoorMessage {
     entity: Entity,
 }
@@ -41,87 +38,103 @@ impl From<Entity> for DoorMessage {
     }
 }
 
-// TODO: see the sector message derive macro todo
-impl SectorMessage for DoorMessage {}
-
-fn update_door_status_from_message(
-    mut doors: Query<(Entity, &mut Door)>,
+fn read_door_focused_message(
+    mut doors: Query<Entity, With<Door>>,
     mut door_messages: MessageReader<DoorMessage>,
+    mut commands: Commands,
 ) {
-    let active_doors: Vec<Entity> = door_messages.read().map(|m| m.entity).collect();
+    let active_doors: Vec<Entity> = door_messages.read().map(|message| message.entity).collect();
+    for door_entity in &mut doors {
+        if active_doors.contains(&door_entity) {
+            commands.entity(door_entity).insert(DoorIsFocused);
+        } else {
+            commands.entity(door_entity).remove::<DoorIsFocused>();
+        }
+    }
+}
 
-    for (entity, mut door) in &mut doors {
-        // TODO: make this a marker component instead
-        door.is_near = active_doors.contains(&entity);
+#[derive(Resource)]
+pub struct DoorColors {
+    pub fill_color: LinearRgba,
+    pub focus_color: LinearRgba,
+}
+
+impl Default for DoorColors {
+    fn default() -> Self {
+        Self {
+            fill_color: LinearRgba::new(0.0, 0.0, 1.0, 1.0),
+            focus_color: LinearRgba::new(0.0, 0.25, 1.0, 1.0),
+        }
     }
 }
 
 #[derive(Component)]
 pub struct Door {
     fill_color: LinearRgba,
-    highlight_color: LinearRgba,
-    open_offset: Vec2,
-    is_near: bool,
+    focus_color: LinearRgba,
 }
 
 impl Door {
-    pub fn with_open_offset(self, open_offset: Vec2) -> Self {
+    pub fn new(fill_color: LinearRgba, focus_color: LinearRgba, offset: Vec2) -> Self {
         Self {
-            open_offset,
-            ..self
+            fill_color,
+            focus_color,
+            offset,
         }
     }
 }
 
-impl Default for Door {
-    fn default() -> Self {
-        Self {
-            // Blue, full opacity
-            fill_color: DOOR_DEFAULT_FILL_COLOR,
-            // Yellow, full opacity
-            highlight_color: DOOR_DEFAULT_HIGHLIGHT_COLOR,
-            open_offset: Vec2::ZERO,
-            is_near: false,
-        }
+// Holds information about the animation we programmatically create.
+pub struct AnimationInfo {
+    // The name of the animation target (in this case, the text).
+    target_name: Name,
+    // The ID of the animation target, derived from the name.
+    target_id: AnimationTargetId,
+    // The animation graph asset.
+    graph: Handle<AnimationGraph>,
+    // The index of the node within that graph.
+    node_index: AnimationNodeIndex,
+}
+
+impl AnimationInfo {
+    fn create() -> AnimationInfo {
+        
     }
 }
 
-// fn on_door_
+
+fn spawn_door() -> impl Bundle {
+    let AnimationInfo
+}
 
 fn update_doors(
-    controllers: Query<&Transform, With<CharacterController>>,
     keyboard: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
-    mut doors: Query<(&mut Transform, &Door, Entity, Has<DoorOpen>), Without<CharacterController>>,
+    mut doors: Query<
+        (
+            &mut Transform,
+            &Door,
+            Entity,
+            Has<DoorIsFocused>,
+            Has<DoorIsOpen>,
+        ),
+        Without<CharacterController>,
+    >,
 ) {
-    for (mut door_transform, door, door_entity_id, is_open) in &mut doors {
-        let mut entity = commands.entity(door_entity_id);
-
-        let mut door_is_near = false;
-
-        for controller_transform in &controllers {
-            // TODO: make this use a collider attached to the door object rather than a simple
-            // distance check to determine if a player is near
-            if door.is_near {
-                door_is_near = true;
-
-                // TODO: move this to an Update system that sends a door open message
-                if keyboard.just_pressed(KeyCode::Space) {
-                    if is_open {
-                        entity.remove::<DoorOpen>();
-                        door_transform.translation -= door.open_offset.extend(0.0);
-                    } else {
-                        entity.insert(DoorOpen);
-                        door_transform.translation += door.open_offset.extend(0.0);
-                    }
-                }
-            }
+    for (mut door_transform, door, door_entity_id, is_focused, is_open) in &mut doors {
+        if !is_focused {
+            continue;
         }
 
-        if door_is_near {
-            entity.insert(DoorIsNear);
-        } else {
-            entity.remove::<DoorIsNear>();
+        let mut entity = commands.entity(door_entity_id);
+        if keyboard.just_pressed(KeyCode::Space) {
+            if is_open {
+                entity.remove::<DoorIsOpen>();
+                door_transform.translation -= door.offset.extend(0.0);
+            } else {
+                entity.insert(DoorIsOpen);
+                door_transform.translation += door.offset.extend(0.0);
+            }
         }
     }
 }

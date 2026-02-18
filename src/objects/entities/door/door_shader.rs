@@ -6,7 +6,7 @@ use bevy::{
 
 use crate::objects::{
     characters::Player,
-    entities::{DOOR_DEFAULT_FILL_COLOR, Door, DoorIsNear},
+    entities::{Door, DoorIsFocused},
 };
 
 const DOOR_SHADER_PATH: &str = "shaders/door.wgsl";
@@ -21,17 +21,17 @@ impl Plugin for DoorShaderPlugin {
 }
 
 fn update_door_shaders(
-    doors: Query<(&Door, Has<DoorIsNear>)>,
+    doors: Query<(&Door, Has<DoorIsFocused>)>,
     player: Single<&Transform, With<Player>>,
     mut door_highlight_shaders: ResMut<Assets<DoorShader>>,
 ) {
     for (_, shader) in door_highlight_shaders.iter_mut() {
-        let (door, is_highlighted) = doors
+        let (door, is_focused) = doors
             .get(shader.door_entity)
             .expect("Door shaders are always spawned with a corresponding door object.");
 
-        shader.fill_color = if is_highlighted {
-            door.highlight_color
+        shader.fill_color = if is_focused {
+            door.focus_color
         } else {
             door.fill_color
         };
@@ -50,10 +50,10 @@ pub struct DoorShader {
 }
 
 impl DoorShader {
-    pub fn new(entity: Entity) -> Self {
+    pub fn new(fill_color: LinearRgba, entity: Entity) -> Self {
         Self {
             // Blue, full opacity
-            fill_color: DOOR_DEFAULT_FILL_COLOR,
+            fill_color,
             player_position: Vec2::ZERO,
             door_entity: entity,
         }

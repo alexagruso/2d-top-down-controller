@@ -11,8 +11,6 @@ use bevy::{math::InvalidDirectionError, prelude::*};
     // BUG: using ['LinearVelocity'] causes a one frame delay between the player moving and the
     // mesh visually updating
     LinearVelocity,
-    // We use ['RigidBody::Kinematic'] since collision responses for all controllers are handled
-    // manually.
     RigidBody::Kinematic,
     Collider,
     CollisionLayers
@@ -36,7 +34,6 @@ pub enum MovementType {
     Rotation(f32),
 }
 
-// TODO: look into making this use `EntityEvent` or observers rather than `Message`
 #[derive(Message)]
 pub struct ControllerMovement {
     movement: MovementType,

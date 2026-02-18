@@ -5,7 +5,7 @@ use avian2d::prelude::*;
 use bevy::prelude::*;
 
 use crate::{
-    objects::entities::{Door, DoorShader},
+    objects::entities::{Door, DoorColors, DoorShader},
     physics::ObjectLayer,
 };
 
@@ -15,6 +15,7 @@ const WALL_COLOR: Color = Color::srgb(0.5, 0.5, 0.5);
 pub struct Wall;
 
 pub fn setup_geometry(
+    door_colors: Res<DoorColors>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut color_materials: ResMut<Assets<ColorMaterial>>,
@@ -67,6 +68,7 @@ pub fn setup_geometry(
         vec2(300.0, 0.0),
         vec2(0.0, 120.0),
         0.0,
+        &door_colors,
         &mut commands,
         &mut meshes,
         &mut door_materials,
@@ -126,6 +128,7 @@ pub fn setup_geometry(
         vec2(0.0, 125.0),
         vec2(-120.0, 0.0),
         0.0,
+        &door_colors,
         &mut commands,
         &mut meshes,
         &mut door_materials,
@@ -152,6 +155,7 @@ pub fn setup_geometry(
         vec2(0.0, -125.0),
         vec2(120.0, 0.0),
         0.0,
+        &door_colors,
         &mut commands,
         &mut meshes,
         &mut door_materials,
@@ -183,14 +187,13 @@ fn rectangle_wall_bundle(
 fn spawn_door(
     size: Vec2,
     position: Vec2,
-    open_offset: Vec2,
     // Degrees
     angle: f32,
+    door_colors: &Res<DoorColors>,
     commands: &mut Commands,
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<DoorShader>>,
 ) {
-    // TODO: look for a better way to get the entity id
     let door_entity_id = commands
         .spawn((
             Mesh2d(meshes.add(Rectangle::new(size.x, size.y))),
@@ -201,10 +204,10 @@ fn spawn_door(
                 LayerMask(ObjectLayer::Door.to_bits()),
                 LayerMask(ObjectLayer::None.to_bits()),
             ),
-            Door::default().with_open_offset(open_offset),
+            Door::new(door_colors.fill_color, door_colors.focus_color, open_offset),
         ))
         .id();
     commands.entity(door_entity_id).insert(MeshMaterial2d(
-        materials.add(DoorShader::new(door_entity_id)),
+        materials.add(DoorShader::new(door_colors.fill_color, door_entity_id)),
     ));
 }

@@ -12,14 +12,13 @@ pub mod debug;
 pub mod mouse_cache;
 pub mod physics;
 pub mod sector;
-pub mod view_cone;
 pub mod world;
 
 pub mod objects {
     use bevy::prelude::*;
 
     use crate::objects::{
-        characters::{CharacterControllerPlugin, OtherCharacterPlugin, PlayerPlugin},
+        characters::{CharacterControllerPlugin, PlayerPlugin},
         entities::DoorPlugin,
     };
 
@@ -31,12 +30,7 @@ pub mod objects {
     // TODO: separate these into character/entity/... plugins
     impl Plugin for ObjectPlugin {
         fn build(&self, app: &mut App) {
-            app.add_plugins((
-                CharacterControllerPlugin,
-                PlayerPlugin,
-                // OtherCharacterPlugin,
-                DoorPlugin,
-            ));
+            app.add_plugins((CharacterControllerPlugin, PlayerPlugin, DoorPlugin));
         }
     }
 }
@@ -96,7 +90,6 @@ impl Plugin for GamePlugin {
         app.add_plugins((
             DebugPlugin,
             ObjectPlugin,
-            // TODO: implement door message
             SectorPlugin::<DoorMessage>::default(),
             WorldPlugin::new(WorldType::CustomGeometry),
         ));
