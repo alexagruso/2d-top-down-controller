@@ -149,7 +149,9 @@ fn player_setup(
             custom_size: Some(Vec2::splat(75.0)),
             ..default()
         },
-        Collider::capsule(10.0, 25.0),
+        // Artificially enlarge collider for testing
+        Collider::capsule(35.0, 100.0),
+        // Collider::capsule(10.0, 25.0),
         object_collision_layers(
             vec![ObjectLayer::Player],
             vec![ObjectLayer::Obstacle, ObjectLayer::Door],
@@ -211,41 +213,57 @@ fn player_input(
     player_movement_event.write(ControllerMovement::from_translation(velocity, entity));
 }
 
+// TODO: separate the player and legs rotation
 fn rotate_player(
-    window: Single<&Window, With<PrimaryWindow>>,
-    camera: Single<(&Camera, &GlobalTransform), With<PlayerCamera>>,
-    player_velocity: Query<&LinearVelocity, With<Player>>,
-    mut legs_sprite: Query<(&mut Sprite, &AnimationIndices), With<PlayerLegs>>,
-    // The QueryData type must be the same for Without to work
+    keyboard: Res<ButtonInput<KeyCode>>,
+    time: Res<Time<Fixed>>,
     mut player_transform: Query<&mut Transform, With<Player>>,
-    mut legs_transform: Query<&mut Transform, (With<PlayerLegs>, Without<Player>)>,
+    // window: Single<&Window, With<PrimaryWindow>>,
+    // camera: Single<(&Camera, &GlobalTransform), With<PlayerCamera>>,
+    // player_velocity: Query<&LinearVelocity, With<Player>>,
+    // mut legs_sprite: Query<(&mut Sprite, &AnimationIndices), With<PlayerLegs>>,
+    // // The QueryData type must be the same for Without to work
+    // mut player_transform: Query<&mut Transform, With<Player>>,
+    // mut legs_transform: Query<&mut Transform, (With<PlayerLegs>, Without<Player>)>,
 ) -> Result {
-    let (camera, camera_transform) = camera.into_inner();
-    let cursor_world_position = match window.cursor_position() {
-        Some(viewport_position) => camera
-            .viewport_to_world_2d(camera_transform, viewport_position)
-            .expect("Viewport to world conversion should never fail"),
-        None => return Ok(()),
-    };
+    // let (camera, camera_transform) = camera.into_inner();
+    // let cursor_world_position = match window.cursor_position() {
+    //     Some(viewport_position) => camera
+    //         .viewport_to_world_2d(camera_transform, viewport_position)
+    //         .expect("Viewport to world conversion should never fail"),
+    //     None => return Ok(()),
+    // };
+    //
+    // let mut player_transform = player_transform.single_mut()?;
+    // let mut legs_transform = legs_transform.single_mut()?;
+    //
+    // let player_position = player_transform.translation.xy();
+    // let player_angle = Vec2::X.angle_to(cursor_world_position - player_position);
+    // player_transform.rotation = Quat::from_rotation_z(player_angle);
+    //
+    // let player_velocity = player_velocity.single()?.xy();
+    // if player_velocity != Vec2::ZERO {
+    //     // De-rotate by player angle then rotate according to velocity
+    //     legs_transform.rotation = Quat::from_rotation_z(player_velocity.to_angle() - player_angle);
+    // } else {
+    //     let (mut sprite, indices) = legs_sprite.single_mut()?;
+    //     legs_transform.rotation = Quat::from_rotation_z(0.0);
+    //     if let Some(atlas) = &mut sprite.texture_atlas {
+    //         atlas.index = indices.first;
+    //     }
+    // }
 
-    let mut player_transform = player_transform.single_mut()?;
-    let mut legs_transform = legs_transform.single_mut()?;
+    let mut rot_velocity: f32 = 0.0;
 
-    let player_position = player_transform.translation.xy();
-    let player_angle = Vec2::X.angle_to(cursor_world_position - player_position);
-    player_transform.rotation = Quat::from_rotation_z(player_angle);
-
-    let player_velocity = player_velocity.single()?.xy();
-    if player_velocity != Vec2::ZERO {
-        // De-rotate by player angle then rotate according to velocity
-        legs_transform.rotation = Quat::from_rotation_z(player_velocity.to_angle() - player_angle);
-    } else {
-        let (mut sprite, indices) = legs_sprite.single_mut()?;
-        legs_transform.rotation = Quat::from_rotation_z(0.0);
-        if let Some(atlas) = &mut sprite.texture_atlas {
-            atlas.index = indices.first;
-        }
+    if keyboard.pressed(KeyCode::KeyQ) {
+        rot_velocity -= 1.0;
     }
+    if keyboard.pressed(KeyCode::KeyE) {
+        rot_velocity += 1.0;
+    }
+
+    let mut transform = player_transform.single_mut().unwrap();
+    transform.rotate_z(rot_velocity * time.delta_secs());
 
     Ok(())
 }

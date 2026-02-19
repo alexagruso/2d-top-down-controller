@@ -21,6 +21,22 @@ pub fn setup_geometry(
     mut color_materials: ResMut<Assets<ColorMaterial>>,
     mut door_materials: ResMut<Assets<DoorShader>>,
 ) {
+    // Collision test walls
+    commands.spawn(rectangle_wall_bundle(
+        vec2(150.0, 25.0),
+        vec2(-90.0, 550.0),
+        -45.0,
+        &mut meshes,
+        &mut color_materials,
+    ));
+    commands.spawn(rectangle_wall_bundle(
+        vec2(150.0, 25.0),
+        vec2(90.0, 550.0),
+        45.0,
+        &mut meshes,
+        &mut color_materials,
+    ));
+
     // Left walls
     commands.spawn(rectangle_wall_bundle(
         vec2(25.0, 275.0),
