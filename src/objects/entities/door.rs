@@ -3,7 +3,7 @@ mod door_shader;
 use derive::SectorMessage;
 pub use door_shader::*;
 
-use bevy::{animation::AnimationTargetId, prelude::*};
+use bevy::prelude::*;
 
 use crate::{objects::characters::CharacterController, sector::SectorMessage};
 

@@ -21,7 +21,7 @@ fn main() {
                 .set(ImagePlugin::default_nearest())
                 .set(WinitPlugin::default()),
             FrameTimeDiagnosticsPlugin::default(),
-            PhysicsPlugins::default().with_length_unit(200.0),
+            PhysicsPlugins::default().with_length_unit(20.0),
             PhysicsDebugPlugin::default(),
             GamePlugin,
         ))

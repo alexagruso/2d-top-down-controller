@@ -5,7 +5,7 @@ use std::{f32::consts::PI, time::Duration};
 pub use player_shader::*;
 
 use avian2d::prelude::*;
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
 
 use crate::{
     debug::CameraZoom,
