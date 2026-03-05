@@ -1,5 +1,6 @@
 // NOTE: link to paper outlining possible improvements to this algorithm that would fix the
 // jittering when flat surfaces move along sharp corners:
+//
 // https://arxiv.org/ftp/arxiv/papers/1211/1211.0059.pdf
 
 use avian2d::prelude::*;
@@ -8,8 +9,8 @@ use bevy::{math::InvalidDirectionError, prelude::*};
 #[derive(Component)]
 #[require(
     Transform,
-    // BUG: using ['LinearVelocity'] causes a one frame delay between the player moving and the
-    // mesh visually updating
+    // BUG: When using [`LinearVelocity`], we must add the velocity to any world position that
+    // camera entities needs to use
     LinearVelocity,
     RigidBody::Kinematic,
     Collider,
