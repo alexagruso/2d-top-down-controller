@@ -2,7 +2,7 @@ use avian2d::prelude::*;
 use bevy::{
     diagnostic::FrameTimeDiagnosticsPlugin, log::LogPlugin, prelude::*, winit::WinitPlugin,
 };
-use topdown_controller_2d::GamePlugin;
+use topdown_controller_2d::{GamePlugin, debug::GameDebugPlugin};
 
 fn main() {
     App::new()
@@ -13,7 +13,7 @@ fn main() {
                 .disable::<LogPlugin>()
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: String::from("Crunch"),
+                        title: String::from("Burn Notice"),
                         ..default()
                     }),
                     ..default()
@@ -22,8 +22,11 @@ fn main() {
                 .set(WinitPlugin::default()),
             FrameTimeDiagnosticsPlugin::default(),
             PhysicsPlugins::default().with_length_unit(20.0),
-            PhysicsDebugPlugin::default(),
             GamePlugin,
+            #[cfg(debug_assertions)]
+            PhysicsDebugPlugin::default(),
+            #[cfg(debug_assertions)]
+            GameDebugPlugin,
         ))
         .run();
 }

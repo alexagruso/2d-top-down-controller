@@ -1,5 +1,7 @@
 mod player_shader;
 
+mod legs;
+
 use std::{f32::consts::PI, time::Duration};
 
 pub use player_shader::*;
@@ -10,7 +12,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use crate::{
     debug::CameraZoom,
     objects::{
-        characters::{CharacterController, ControllerMovement},
+        characters::{CharacterController, ControllerMovement, player::legs::PlayerLegs},
         entities::DoorMessage,
     },
     physics::{ObjectLayer, object_collision_layers},
@@ -41,9 +43,6 @@ impl Plugin for PlayerPlugin {
 
 #[derive(Component)]
 struct PlayerCamera;
-
-#[derive(Component)]
-struct PlayerLegs;
 
 #[derive(Component)]
 pub struct Player {
@@ -175,6 +174,7 @@ fn player_setup(
                     custom_size: Some(Vec2::splat(75.0)),
                     ..default()
                 },
+                Transform::from_xyz(0.0, 0.0, -1.0),
                 leg_indices,
                 AnimationTimer(Timer::from_seconds(0.035, TimerMode::Repeating)),
             )

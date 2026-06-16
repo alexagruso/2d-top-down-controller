@@ -9,9 +9,9 @@ pub use camera_zoom::*;
 pub use fps_overlay::*;
 pub use window_esc::*;
 
-pub struct DebugPlugin;
+pub struct GameDebugPlugin;
 
-impl Plugin for DebugPlugin {
+impl Plugin for GameDebugPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
             CameraZoomPlugin,

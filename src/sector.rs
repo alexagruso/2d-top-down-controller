@@ -73,7 +73,7 @@ impl Sector {
 }
 
 // TODO: rename this to a more general message trait
-pub trait SectorMessage: Send + Sync + Message + From<Entity> + 'static {} // Plus L plus Ratio
+pub trait SectorMessage: Send + Sync + Message + From<Entity> + 'static {}
 
 // TODO: rename this to sector sensor or some bullshit like that
 #[derive(Component)]

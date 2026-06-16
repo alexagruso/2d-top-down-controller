@@ -1,7 +1,7 @@
 // TODO: make a prelude for this crate
 
 use crate::{
-    debug::DebugPlugin,
+    debug::GameDebugPlugin,
     objects::{ObjectPlugin, entities::DoorMessage},
     sector::SectorPlugin,
     world::{WorldPlugin, WorldType},
@@ -88,8 +88,7 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            // TODO: move this up a level
-            DebugPlugin,
+            // TODO: change this to a plugin group
             ObjectPlugin,
             SectorPlugin::<DoorMessage>::default(),
             WorldPlugin::new(WorldType::CustomGeometry),
